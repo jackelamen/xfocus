@@ -53,7 +53,7 @@ export default function FocusPage({ user }) {
 
   return (
     <div className="h-screen overflow-y-auto flex flex-col">
-      <div className="flex-1 max-w-lg mx-auto w-full px-6 py-8 flex flex-col">
+      <div className="flex-1 w-full max-w-lg lg:max-w-xl mx-auto px-6 sm:px-8 py-8 lg:py-10 flex flex-col">
 
         {/* Top: date + quiet stat chips */}
         <div className="flex items-center justify-between mb-8">

@@ -15,16 +15,21 @@ export default function Login() {
     setLoading(false)
   }
 
+  const inputStyle = { background: 'var(--surface)', color: 'var(--ink)', border: '1.5px solid var(--line-2)' }
+
   return (
-    <div className="flex items-center justify-center h-screen" style={{ background: '#0f0f1a' }}>
-      <div className="w-full max-w-sm px-4">
+    <div className="xf-canvas flex items-center justify-center h-screen px-5">
+      <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#f97316' }}>
-            <span className="text-white font-black text-2xl" style={{ fontFamily: 'Manrope, sans-serif' }}>xF</span>
+          <div
+            className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4"
+            style={{ background: 'linear-gradient(150deg, var(--coral), var(--peach))', boxShadow: '0 10px 26px rgba(255,155,115,0.45)' }}
+          >
+            <span className="text-white font-extrabold text-2xl" style={{ fontFamily: 'Manrope, sans-serif' }}>xF</span>
           </div>
-          <h1 className="text-2xl font-black text-white" style={{ fontFamily: 'Manrope, sans-serif' }}>xFocus</h1>
-          <p className="text-sm text-white/30 mt-1">Deep work, by design.</p>
+          <h1 className="text-2xl font-extrabold" style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--ink)' }}>xFocus</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--ink-3)' }}>Deep work, by design.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -34,8 +39,8 @@ export default function Login() {
             onChange={e => setEmail(e.target.value)}
             placeholder="Email"
             required
-            className="w-full px-4 py-3 rounded-xl text-sm font-medium text-white placeholder-white/30 outline-none focus:ring-2 transition-all"
-            style={{ background: '#1a1a2e', border: '1.5px solid rgba(255,255,255,0.08)', focusRingColor: '#f97316' }}
+            className="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none transition-all"
+            style={inputStyle}
           />
           <input
             type="password"
@@ -43,14 +48,14 @@ export default function Login() {
             onChange={e => setPassword(e.target.value)}
             placeholder="Password"
             required
-            className="w-full px-4 py-3 rounded-xl text-sm font-medium text-white placeholder-white/30 outline-none focus:ring-2 transition-all"
-            style={{ background: '#1a1a2e', border: '1.5px solid rgba(255,255,255,0.08)' }}
+            className="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none transition-all"
+            style={inputStyle}
           />
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-            style={{ background: '#f97316' }}
+            className="w-full py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            style={{ background: 'linear-gradient(150deg, var(--coral), var(--coral-deep))', boxShadow: 'var(--shadow-coral)' }}
           >
             {loading ? (
               <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -63,7 +68,7 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-white/20 mt-6">
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--ink-4)' }}>
           Sign in with your Pulse account
         </p>
       </div>
