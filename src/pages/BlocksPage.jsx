@@ -238,19 +238,19 @@ export default function BlocksPage({ user }) {
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="xf-canvas h-screen w-full max-w-full flex flex-col overflow-hidden">
 
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 px-4 sm:px-7 py-4 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--line)' }}>
+        {/* Header — stacks on mobile, single row from sm up */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-7 py-4 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--line)' }}>
           <div className="min-w-0">
-            <h2 className="font-extrabold truncate" style={{ fontFamily: 'Manrope, sans-serif', fontSize: 18, color: 'var(--ink)' }}>Time Blocks</h2>
-            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>
+            <h2 className="font-extrabold" style={{ fontFamily: 'Manrope, sans-serif', fontSize: 18, color: 'var(--ink)' }}>Time Blocks</h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
               {viewDate === todayStr() ? 'Today' : viewDate === tomorrowStr() ? 'Tomorrow' : viewDate}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="flex rounded-xl p-1 gap-1" style={{ background: 'var(--canvas)' }}>
+            <div className="flex rounded-xl p-1 gap-1 flex-1 sm:flex-initial" style={{ background: 'var(--canvas)' }}>
               {[{ label: 'Today', val: todayStr() }, { label: 'Tomorrow', val: tomorrowStr() }].map(({ label, val }) => (
                 <button key={val} onClick={() => setViewDate(val)}
-                  className="px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  className="flex-1 sm:flex-initial px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
                   style={viewDate === val ? { background: 'linear-gradient(150deg, var(--coral), var(--peach))', color: '#fff' } : { color: 'var(--ink-3)' }}
                 >
                   {label}
@@ -260,7 +260,7 @@ export default function BlocksPage({ user }) {
             {/* Mobile: open task drawer */}
             <button
               onClick={() => setPanelOpen(true)}
-              className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center"
+              className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-sm)', color: 'var(--lav-deep)' }}
               title="Pulse tasks"
             >
@@ -268,7 +268,7 @@ export default function BlocksPage({ user }) {
             </button>
             <button
               onClick={() => { setFormBlock({}); setFormOpen(true) }}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-sm text-white transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl font-bold text-sm text-white transition-all active:scale-95 flex-shrink-0"
               style={{ background: 'linear-gradient(150deg, var(--coral), var(--coral-deep))', boxShadow: 'var(--shadow-coral)' }}
             >
               <span className="material-symbols-rounded" style={{ fontSize: 16 }}>add</span>
