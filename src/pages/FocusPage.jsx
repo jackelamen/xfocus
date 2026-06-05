@@ -54,11 +54,11 @@ export default function FocusPage({ user }) {
   // ── Shared building blocks (rendered into both mobile + desktop layouts) ──
 
   const header = (
-    <div className="flex items-center justify-between">
-      <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--ink-3)' }}>
+    <div className="flex items-center justify-between gap-2 flex-wrap">
+      <p className="text-xs font-bold uppercase tracking-wider min-w-0" style={{ color: 'var(--ink-3)' }}>
         {dateLabel}
       </p>
-      <div className="flex gap-2.5">
+      <div className="flex gap-2.5 flex-shrink-0">
         {streak > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-sm)', color: 'var(--coral-deep)' }}>
             <span className="material-symbols-rounded" style={{ fontSize: 15 }}>local_fire_department</span>

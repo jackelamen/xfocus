@@ -236,17 +236,17 @@ export default function BlocksPage({ user }) {
 
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="xf-canvas h-screen flex flex-col overflow-hidden">
+      <div className="xf-canvas h-screen w-full max-w-full flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-7 py-4 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--line)' }}>
-          <div>
-            <h2 className="font-extrabold" style={{ fontFamily: 'Manrope, sans-serif', fontSize: 18, color: 'var(--ink)' }}>Time Blocks</h2>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-7 py-4 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--line)' }}>
+          <div className="min-w-0">
+            <h2 className="font-extrabold truncate" style={{ fontFamily: 'Manrope, sans-serif', fontSize: 18, color: 'var(--ink)' }}>Time Blocks</h2>
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--ink-3)' }}>
               {viewDate === todayStr() ? 'Today' : viewDate === tomorrowStr() ? 'Tomorrow' : viewDate}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <div className="flex rounded-xl p-1 gap-1" style={{ background: 'var(--canvas)' }}>
               {[{ label: 'Today', val: todayStr() }, { label: 'Tomorrow', val: tomorrowStr() }].map(({ label, val }) => (
                 <button key={val} onClick={() => setViewDate(val)}
