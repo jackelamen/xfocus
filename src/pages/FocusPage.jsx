@@ -140,13 +140,13 @@ export default function FocusPage({ user }) {
 
   return (
     <div className="h-screen overflow-y-auto flex flex-col">
-      <div className="flex-1 w-full max-w-lg lg:max-w-5xl mx-auto px-6 sm:px-8 py-8 lg:py-10 flex flex-col">
+      <div className="flex-1 w-full max-w-lg md:max-w-5xl mx-auto px-6 sm:px-8 py-8 md:py-10 flex flex-col">
 
         {/* Header — full width on both */}
         <div className="mb-8">{header}</div>
 
-        {/* ── Mobile: single calm column ── */}
-        <div className="flex flex-col lg:hidden">
+        {/* ── Mobile / narrow: single calm column ── */}
+        <div className="flex flex-col md:hidden">
           <div className="mb-8"><IntentionBar user={user} /></div>
           <ActiveBlockCard wrapClass="mb-6" />
           {activeBlockLabel && <div className="mb-6">{activeBlockLabel}</div>}
@@ -158,9 +158,9 @@ export default function FocusPage({ user }) {
         </div>
 
         {/* ── Desktop: two-column dashboard ── */}
-        <div className="hidden lg:grid gap-8 items-start" style={{ gridTemplateColumns: '1fr 1.05fr' }}>
+        <div className="hidden md:grid gap-8 items-start" style={{ gridTemplateColumns: '1fr 1.05fr' }}>
           {/* Left: timer hero (centered in its column) */}
-          <div className="flex flex-col gap-6 lg:sticky lg:top-0">
+          <div className="flex flex-col gap-6 md:sticky md:top-0">
             {timerCard}
             {sessionsCard}
           </div>

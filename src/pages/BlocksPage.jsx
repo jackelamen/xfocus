@@ -260,7 +260,7 @@ export default function BlocksPage({ user }) {
             {/* Mobile: open task drawer */}
             <button
               onClick={() => setPanelOpen(true)}
-              className="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center"
+              className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-sm)', color: 'var(--lav-deep)' }}
               title="Pulse tasks"
             >
@@ -313,7 +313,7 @@ export default function BlocksPage({ user }) {
           </div>
 
           {/* Pulse panel — docked on desktop */}
-          <div className="hidden lg:flex">
+          <div className="hidden md:flex">
             <PulseTaskPanel userId={user.id} />
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function BlocksPage({ user }) {
 
       {/* Pulse panel — drawer on mobile */}
       {panelOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 flex justify-end" onClick={() => setPanelOpen(false)} style={{ background: 'rgba(43,47,68,0.35)' }}>
+        <div className="md:hidden fixed inset-0 z-40 flex justify-end" onClick={() => setPanelOpen(false)} style={{ background: 'rgba(43,47,68,0.35)' }}>
           <div className="h-full" onClick={e => e.stopPropagation()}>
             <PulseTaskPanel userId={user.id} onClose={() => setPanelOpen(false)} />
           </div>
