@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { normalizeSession } from '../store/focusStore.js'
 import { formatMinutes } from '../lib/utils.js'
 import { format, parseISO, startOfWeek, subDays } from 'date-fns'
 import {
@@ -45,7 +46,7 @@ export default function HistoryPage({ user }) {
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .limit(200)
-      const all = data || []
+      const all = (data || []).map(normalizeSession)
       setSessions(all)
       const byDate = {}
       all.forEach(s => {

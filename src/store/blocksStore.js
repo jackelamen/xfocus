@@ -8,8 +8,8 @@ export const useBlocksStore = create((set, get) => ({
   loading: false,
 
   setViewDate(date) {
+    // Page reloads blocks via an effect on viewDate (passing userId).
     set({ viewDate: date })
-    get().loadBlocks()
   },
 
   async loadBlocks(userId) {

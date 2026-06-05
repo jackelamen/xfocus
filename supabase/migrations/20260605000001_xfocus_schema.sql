@@ -1,4 +1,11 @@
--- xFocus schema migration
+-- ⚠️ SUPERSEDED — do NOT apply to the cloud project.
+-- This was the original standalone schema (for a local DB). The live cloud
+-- project (mdkyijbgvxedelcqcouu) shares focus_sessions with Pulse, so xFocus
+-- now INTEGRATES via 20260605120000_xfocus_integration.sql instead (adds
+-- nullable columns + the xFocus-only tables). Kept only for historical
+-- reference. Running this against cloud would conflict with Pulse's schema.
+--
+-- xFocus schema migration (original / local-only)
 -- Apply with: supabase migration up (from ~/Documents/edgex-focus)
 -- Or: supabase db push (if using linked project)
 

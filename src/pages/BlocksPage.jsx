@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core'
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable, pointerWithin } from '@dnd-kit/core'
 import { useBlocksStore } from '../store/blocksStore.js'
 import { useTimerStore } from '../store/timerStore.js'
 import { usePulseTasks } from '../hooks/usePulseTasks.js'
@@ -164,7 +164,7 @@ export default function BlocksPage({ user }) {
   const hours = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i)
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="xf-canvas h-screen flex flex-col overflow-hidden">
 
         {/* Header */}
