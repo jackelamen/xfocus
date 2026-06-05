@@ -85,9 +85,9 @@ body {
 }
 .xf-immersive { animation: xf-fade-in 0.4s ease both; }
 
-/* ============ Focus timer visual styles ============ */
+/* ============ Focus timer faces ============ */
 
-/* Shared: soft glow halo behind the ring while running */
+/* Soft glow halo behind the ring face while running */
 @keyframes xf-halo {
   0%, 100% { transform: scale(0.96); opacity: 0.35; }
   50%      { transform: scale(1.08); opacity: 0.65; }
@@ -97,37 +97,14 @@ body {
   transform-origin: center;
 }
 
-/* Breathing ring: the whole ring gently swells */
-@keyframes xf-ring-breathe {
-  0%, 100% { transform: rotate(-90deg) scale(1); }
-  50%      { transform: rotate(-90deg) scale(1.035); }
+/* Flip-card: each digit card flips down when its value changes */
+@keyframes xf-flip-in {
+  0%   { transform: perspective(300px) rotateX(-90deg); opacity: 0.2; }
+  60%  { transform: perspective(300px) rotateX(12deg);  opacity: 1; }
+  100% { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
 }
-.xf-ring-breathe { animation: xf-ring-breathe 5s ease-in-out infinite; transform-origin: center; }
-
-/* Flowing gradient: rotate the gradient so color never sits still */
-@keyframes xf-grad-spin { to { transform: rotate(360deg); } }
-.xf-grad-rot { animation: xf-grad-spin 8s linear infinite; transform-origin: center; }
-
-/* Orbit: a dot travelling around the ring */
-@keyframes xf-orbit { to { transform: rotate(360deg); } }
-.xf-orbit { animation: xf-orbit 6s linear infinite; transform-origin: center; }
-.xf-orbit-rev { animation: xf-orbit 11s linear infinite reverse; transform-origin: center; }
-
-/* Drifting background particles */
-@keyframes xf-drift {
-  0%   { transform: translateY(0) translateX(0); opacity: 0; }
-  15%  { opacity: 0.7; }
-  85%  { opacity: 0.7; }
-  100% { transform: translateY(-46px) translateX(var(--xf-px, 6px)); opacity: 0; }
-}
-.xf-particle { animation: xf-drift var(--xf-dur, 5s) ease-in-out infinite; animation-delay: var(--xf-delay, 0s); }
-
-/* Liquid fill: surface wave slides horizontally */
-@keyframes xf-wave { to { transform: translateX(-50%); } }
-.xf-wave { animation: xf-wave 3.5s linear infinite; }
-.xf-wave-slow { animation: xf-wave 5.5s linear infinite; }
+.xf-flip { animation: xf-flip-in 0.42s ease-out; transform-origin: top center; }
 
 @media (prefers-reduced-motion: reduce) {
-  .xf-halo, .xf-ring-breathe, .xf-grad-rot, .xf-orbit, .xf-orbit-rev,
-  .xf-particle, .xf-wave, .xf-wave-slow { animation: none !important; }
+  .xf-halo, .xf-flip { animation: none !important; }
 }

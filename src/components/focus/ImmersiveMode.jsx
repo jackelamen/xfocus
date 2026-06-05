@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useTimerStore } from '../../store/timerStore.js'
 import { useFocusStore } from '../../store/focusStore.js'
 import { formatTime, startAmbient } from '../../lib/utils.js'
+import TimerFace, { TIMER_STYLES, STYLE_STORAGE_KEY } from '../timer/TimerFace.jsx'
+import TimerStylePicker from '../timer/TimerStylePicker.jsx'
 
 const SOUNDS = [
   { id: 'off',   icon: 'volume_off',   label: 'Silent' },
@@ -17,6 +19,18 @@ export default function ImmersiveMode({ onExit, onComplete }) {
 
   const [sound, setSound] = useState('off')
   const ambientRef = useRef(null)
+
+  const [tStyle, setTStyle] = useState('ring')
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(STYLE_STORAGE_KEY)
+      if (s && TIMER_STYLES.some(t => t.id === s)) setTStyle(s)
+    } catch { /* ignore */ }
+  }, [])
+  const pickStyle = (id) => {
+    setTStyle(id)
+    try { localStorage.setItem(STYLE_STORAGE_KEY, id) } catch { /* ignore */ }
+  }
 
   const plannedSecs = mode === 'flow' ? 0 : plannedMins * 60
   const remaining = Math.max(0, plannedSecs - elapsedSecs)
@@ -42,9 +56,6 @@ export default function ImmersiveMode({ onExit, onComplete }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onExit])
-
-  const breathe = running ? 'xf-breathe 6s ease-in-out infinite' : 'none'
-  const breatheSlow = running ? 'xf-breathe-slow 6s ease-in-out infinite' : 'none'
 
   return (
     <div
@@ -74,51 +85,26 @@ export default function ImmersiveMode({ onExit, onComplete }) {
         )}
       </div>
 
-      {/* Breathing focus visual */}
-      <div className="relative flex items-center justify-center" style={{ width: 340, height: 340 }}>
-        {/* Outer glow rings */}
-        <div
-          className="absolute rounded-full"
-          style={{ width: 320, height: 320, background: 'radial-gradient(circle, rgba(249,115,22,0.12), transparent 70%)', animation: breatheSlow }}
+      {/* Timer visual (selectable style) */}
+      <div className="flex flex-col items-center">
+        <TimerFace
+          style={tStyle}
+          display={display}
+          progress={progress}
+          running={running}
+          overtime={overtime}
+          stateLabel={overtime ? 'still going' : running ? 'focus' : idle ? 'ready' : 'paused'}
+          theme="dark"
+          size={320}
         />
-        <div
-          className="absolute rounded-full"
-          style={{ width: 240, height: 240, background: 'radial-gradient(circle, rgba(249,115,22,0.18), transparent 70%)', animation: breathe }}
-        />
+        {activeBlockTitle && (
+          <span className="text-xs text-orange-300/70 mt-2 max-w-[220px] text-center truncate">{activeBlockTitle}</span>
+        )}
+      </div>
 
-        {/* Progress ring */}
-        <svg width="300" height="300" viewBox="0 0 100 100" className="absolute">
-          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1.5" />
-          <circle
-            cx="50" cy="50" r="45" fill="none"
-            stroke="url(#xf-grad)" strokeWidth="2.5" strokeLinecap="round"
-            strokeDasharray={2 * Math.PI * 45}
-            strokeDashoffset={2 * Math.PI * 45 * (1 - progress)}
-            style={{ transition: 'stroke-dashoffset 1s linear', transform: 'rotate(-90deg)', transformOrigin: 'center' }}
-          />
-          <defs>
-            <linearGradient id="xf-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#fbbf24" />
-              <stop offset="100%" stopColor="#f97316" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        {/* Time */}
-        <div className="relative flex flex-col items-center">
-          <span
-            className="text-6xl font-black tabular-nums text-white"
-            style={{ fontFamily: 'Manrope, sans-serif', letterSpacing: '-0.03em', color: overtime ? '#ffb894' : '#fff' }}
-          >
-            {display}
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-[0.3em] mt-1 text-white/30">
-            {overtime ? 'still going' : running ? 'breathe · focus' : idle ? 'ready' : 'paused'}
-          </span>
-          {activeBlockTitle && (
-            <span className="text-xs text-orange-300/70 mt-2 max-w-[220px] text-center truncate">{activeBlockTitle}</span>
-          )}
-        </div>
+      {/* Style switcher */}
+      <div className="mt-5">
+        <TimerStylePicker value={tStyle} onChange={pickStyle} theme="dark" />
       </div>
 
       {/* Controls */}
