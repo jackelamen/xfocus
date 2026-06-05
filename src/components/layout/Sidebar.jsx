@@ -26,7 +26,7 @@ export default function Sidebar({ user }) {
 
   return (
     <aside
-      className="flex flex-col items-center py-5 gap-1.5 flex-shrink-0"
+      className="hidden sm:flex flex-col items-center py-5 gap-1.5 flex-shrink-0"
       style={{ width: 66, background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(12px)', borderRight: '1px solid var(--line)' }}
     >
       {/* Logo */}

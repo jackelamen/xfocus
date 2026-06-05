@@ -140,7 +140,7 @@ export default function FocusPage({ user }) {
 
   return (
     <div className="h-screen overflow-y-auto flex flex-col">
-      <div className="flex-1 w-full max-w-lg md:max-w-5xl mx-auto px-6 sm:px-8 py-8 md:py-10 flex flex-col">
+      <div className="flex-1 w-full max-w-lg md:max-w-5xl mx-auto px-6 sm:px-8 py-8 md:py-10 pb-24 sm:pb-10 flex flex-col">
 
         {/* Header — full width on both */}
         <div className="mb-8">{header}</div>

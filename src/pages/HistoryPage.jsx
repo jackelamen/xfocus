@@ -96,7 +96,7 @@ export default function HistoryPage({ user }) {
 
   return (
     <div className="xf-canvas h-screen overflow-y-auto">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-7">
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-7 pb-24 sm:pb-7">
 
         {/* Header */}
         <div className="mb-6">

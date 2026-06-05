@@ -5,6 +5,7 @@ import { useAuth } from './hooks/useAuth.js'
 import { useFocusStore } from './store/focusStore.js'
 import { useBlocksStore } from './store/blocksStore.js'
 import Sidebar from './components/layout/Sidebar.jsx'
+import BottomNav from './components/layout/BottomNav.jsx'
 import Login from './pages/Login.jsx'
 import FocusPage from './pages/FocusPage.jsx'
 import BlocksPage from './pages/BlocksPage.jsx'
@@ -45,6 +46,7 @@ function AuthGate() {
           <Route path="*" element={<Navigate to="/focus" replace />} />
         </Routes>
       </main>
+      <BottomNav />
     </div>
   )
 }

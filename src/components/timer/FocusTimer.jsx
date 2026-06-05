@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useTimerStore } from '../../store/timerStore.js'
 import { formatTime } from '../../lib/utils.js'
 import TaskSelector from './TaskSelector.jsx'
@@ -28,6 +28,20 @@ export default function FocusTimer({ onComplete, user }) {
     setTStyle(id)
     try { localStorage.setItem(STYLE_STORAGE_KEY, id) } catch { /* ignore */ }
   }
+
+  // Settings popover (holds the timer-style switcher)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsRef = useRef(null)
+  useEffect(() => {
+    if (!settingsOpen) return
+    const onDown = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setSettingsOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setSettingsOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [settingsOpen])
+
+  const activeStyleLabel = TIMER_STYLES.find(t => t.id === tStyle)?.label || 'Timer style'
 
   const plannedSecs = mode === 'flow' ? 0 : plannedMins * 60
   const remaining = Math.max(0, plannedSecs - elapsedSecs)
@@ -101,8 +115,30 @@ export default function FocusTimer({ onComplete, user }) {
         size={230}
       />
 
-      {/* Style switcher */}
-      <TimerStylePicker value={tStyle} onChange={pickStyle} theme="light" />
+      {/* Settings (timer style lives here, no longer always-visible) */}
+      <div className="relative" ref={settingsRef}>
+        <button
+          onClick={() => setSettingsOpen(o => !o)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          style={{ background: 'var(--canvas)', color: 'var(--ink-3)' }}
+          title="Timer settings"
+          aria-expanded={settingsOpen}
+        >
+          <span className="material-symbols-rounded" style={{ fontSize: 16 }}>tune</span>
+          <span>{activeStyleLabel}</span>
+          <span className="material-symbols-rounded" style={{ fontSize: 16 }}>{settingsOpen ? 'expand_less' : 'expand_more'}</span>
+        </button>
+
+        {settingsOpen && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 p-3 rounded-2xl"
+            style={{ width: 'min(320px, 86vw)', background: 'var(--surface)', boxShadow: 'var(--shadow)', border: '1px solid var(--line)' }}
+          >
+            <p className="text-[11px] font-extrabold uppercase tracking-wider mb-2 px-1" style={{ color: 'var(--ink-3)' }}>Timer style</p>
+            <TimerStylePicker value={tStyle} onChange={(id) => { pickStyle(id); setSettingsOpen(false) }} theme="light" />
+          </div>
+        )}
+      </div>
 
       {/* Overtime hint */}
       {overtime && (

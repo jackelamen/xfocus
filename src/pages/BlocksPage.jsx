@@ -280,7 +280,7 @@ export default function BlocksPage({ user }) {
         {/* Main area */}
         <div className="flex flex-1 overflow-hidden">
           {/* Timeline */}
-          <div className="flex-1 overflow-y-auto" ref={timelineRef}>
+          <div className="flex-1 overflow-y-auto pb-20 sm:pb-0" ref={timelineRef}>
             <div className="flex mx-auto" style={{ minHeight: TIMELINE_HEIGHT + 64, maxWidth: 720 }}>
               {/* Hour labels */}
               <div className="flex-shrink-0 select-none" style={{ width: 56, paddingTop: 8, paddingBottom: 32 }}>
