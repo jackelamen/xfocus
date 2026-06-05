@@ -84,3 +84,50 @@ body {
   to   { opacity: 1; }
 }
 .xf-immersive { animation: xf-fade-in 0.4s ease both; }
+
+/* ============ Focus timer visual styles ============ */
+
+/* Shared: soft glow halo behind the ring while running */
+@keyframes xf-halo {
+  0%, 100% { transform: scale(0.96); opacity: 0.35; }
+  50%      { transform: scale(1.08); opacity: 0.65; }
+}
+.xf-halo {
+  animation: xf-halo 4.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Breathing ring: the whole ring gently swells */
+@keyframes xf-ring-breathe {
+  0%, 100% { transform: rotate(-90deg) scale(1); }
+  50%      { transform: rotate(-90deg) scale(1.035); }
+}
+.xf-ring-breathe { animation: xf-ring-breathe 5s ease-in-out infinite; transform-origin: center; }
+
+/* Flowing gradient: rotate the gradient so color never sits still */
+@keyframes xf-grad-spin { to { transform: rotate(360deg); } }
+.xf-grad-rot { animation: xf-grad-spin 8s linear infinite; transform-origin: center; }
+
+/* Orbit: a dot travelling around the ring */
+@keyframes xf-orbit { to { transform: rotate(360deg); } }
+.xf-orbit { animation: xf-orbit 6s linear infinite; transform-origin: center; }
+.xf-orbit-rev { animation: xf-orbit 11s linear infinite reverse; transform-origin: center; }
+
+/* Drifting background particles */
+@keyframes xf-drift {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  15%  { opacity: 0.7; }
+  85%  { opacity: 0.7; }
+  100% { transform: translateY(-46px) translateX(var(--xf-px, 6px)); opacity: 0; }
+}
+.xf-particle { animation: xf-drift var(--xf-dur, 5s) ease-in-out infinite; animation-delay: var(--xf-delay, 0s); }
+
+/* Liquid fill: surface wave slides horizontally */
+@keyframes xf-wave { to { transform: translateX(-50%); } }
+.xf-wave { animation: xf-wave 3.5s linear infinite; }
+.xf-wave-slow { animation: xf-wave 5.5s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .xf-halo, .xf-ring-breathe, .xf-grad-rot, .xf-orbit, .xf-orbit-rev,
+  .xf-particle, .xf-wave, .xf-wave-slow { animation: none !important; }
+}

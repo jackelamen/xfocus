@@ -1,14 +1,26 @@
-import React from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useTimerStore } from '../../store/timerStore.js'
 import { formatTime } from '../../lib/utils.js'
 import TaskSelector from './TaskSelector.jsx'
 
-const CIRCUM = 282.74  // 2 * π * 45
+const SIZE = 230
+const R = 45
+const CIRCUM = 2 * Math.PI * R // 282.74
+
 const MODES = [
   { id: 'pomodoro', label: 'Pomodoro' },
   { id: 'flow', label: 'Flow' },
   { id: 'custom', label: 'Custom' },
 ]
+
+const VISUALS = [
+  { id: 'breathe', label: 'Breathing', icon: 'spa' },
+  { id: 'orbit', label: 'Orbit', icon: 'blur_on' },
+  { id: 'liquid', label: 'Liquid', icon: 'water_drop' },
+  { id: 'gradient', label: 'Flow', icon: 'gradient' },
+]
+
+const VISUAL_KEY = 'xf-timer-visual'
 
 export default function FocusTimer({ onComplete, user }) {
   const {
@@ -16,14 +28,28 @@ export default function FocusTimer({ onComplete, user }) {
     start, pause, stop, reset, extend, setMode, setDuration, setStrict,
   } = useTimerStore()
 
+  const [visual, setVisual] = useState('breathe')
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VISUAL_KEY)
+      if (saved && VISUALS.some(v => v.id === saved)) setVisual(saved)
+    } catch { /* ignore */ }
+  }, [])
+
+  const pickVisual = (id) => {
+    setVisual(id)
+    try { localStorage.setItem(VISUAL_KEY, id) } catch { /* ignore */ }
+  }
+
   const plannedSecs = mode === 'flow' ? 0 : plannedMins * 60
   const remaining = Math.max(0, plannedSecs - elapsedSecs)
   const overtimeSecs = Math.max(0, elapsedSecs - plannedSecs)
   const progress = mode === 'flow' ? 0 : plannedSecs > 0 ? Math.min(1, elapsedSecs / plannedSecs) : 0
   const idle = !running && elapsedSecs === 0
   const lowTime = mode !== 'flow' && remaining <= 5 * 60 && running && !overtime
+  const active = running && !idle
 
-  // What the big number shows
   const display = mode === 'flow'
     ? formatTime(elapsedSecs)
     : overtime
@@ -39,9 +65,6 @@ export default function FocusTimer({ onComplete, user }) {
         : mode === 'flow'
           ? 'flowing'
           : 'in flow'
-
-  // Flow has no fixed ring; show a gentle pulsing full ring instead.
-  const ringOffset = mode === 'flow' ? CIRCUM * 0.25 : CIRCUM * (1 - progress)
 
   return (
     <div className="flex flex-col items-center gap-6 w-full">
@@ -81,37 +104,37 @@ export default function FocusTimer({ onComplete, user }) {
       {/* Task selector */}
       {user && <TaskSelector user={user} disabled={!idle} />}
 
-      {/* Ring */}
-      <div className="relative" style={{ width: 230, height: 230 }}>
-        <svg width="230" height="230" viewBox="0 0 100 100">
-          <defs>
-            <linearGradient id="xf-timer-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor={lowTime ? '#f4a04d' : 'var(--coral)'} />
-              <stop offset="100%" stopColor={lowTime ? '#ef7a4d' : 'var(--peach)'} />
-            </linearGradient>
-          </defs>
-          <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(43,47,68,0.06)" strokeWidth="3" />
-          <circle
-            cx="50" cy="50" r="45"
-            fill="none"
-            stroke="url(#xf-timer-grad)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            strokeDasharray={CIRCUM}
-            strokeDashoffset={ringOffset}
-            className="timer-ring"
-            style={mode === 'flow' && running ? { animation: 'xf-breathe 4s ease-in-out infinite', transformOrigin: 'center' } : undefined}
-          />
-        </svg>
+      {/* Visual */}
+      <TimerVisual
+        visual={visual}
+        mode={mode}
+        progress={progress}
+        active={active}
+        running={running}
+        overtime={overtime}
+        lowTime={lowTime}
+        display={display}
+        stateLabel={stateLabel}
+      />
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="tabular-nums" style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 50, letterSpacing: '-0.04em', color: overtime ? 'var(--coral-deep)' : 'var(--ink)' }}>
-            {display}
-          </span>
-          <span className="text-[11px] font-bold uppercase mt-0.5" style={{ letterSpacing: '0.28em', color: 'var(--ink-3)' }}>
-            {stateLabel}
-          </span>
-        </div>
+      {/* Visual style switcher */}
+      <div className="flex rounded-[13px] p-1" style={{ background: 'var(--canvas)' }}>
+        {VISUALS.map(v => (
+          <button
+            key={v.id}
+            onClick={() => pickVisual(v.id)}
+            className="flex items-center gap-1.5 px-3 py-[6px] rounded-[10px] text-xs font-bold transition-all"
+            style={
+              visual === v.id
+                ? { background: 'var(--surface)', color: 'var(--coral-deep)', boxShadow: 'var(--shadow-sm)' }
+                : { color: 'var(--ink-3)' }
+            }
+            title={v.label}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: 16 }}>{v.icon}</span>
+            <span className="hidden sm:inline">{v.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Overtime hint */}
@@ -195,6 +218,166 @@ export default function FocusTimer({ onComplete, user }) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/* ---------------------------------------------------------------- */
+/* The animated face of the timer. Switches between four styles.    */
+/* ---------------------------------------------------------------- */
+function TimerVisual({ visual, mode, progress, active, running, overtime, lowTime, display, stateLabel }) {
+  const c1 = lowTime ? '#f4a04d' : 'var(--coral)'
+  const c2 = lowTime ? '#ef7a4d' : 'var(--peach)'
+  const ringOffset = mode === 'flow' ? CIRCUM * 0.25 : CIRCUM * (1 - progress)
+
+  // dot position for orbit progress marker (along the ring)
+  const angle = mode === 'flow' ? 0 : progress * 360
+  const rad = (angle - 90) * (Math.PI / 180)
+  const dotX = 50 + R * Math.cos(rad)
+  const dotY = 50 + R * Math.sin(rad)
+
+  return (
+    <div className="relative" style={{ width: SIZE, height: SIZE }}>
+      {/* soft glow halo behind everything while running */}
+      {active && (
+        <div
+          className="absolute inset-0 rounded-full xf-halo"
+          style={{
+            background: `radial-gradient(circle at 50% 50%, ${lowTime ? 'rgba(244,160,77,0.45)' : 'rgba(255,126,77,0.35)'} 0%, rgba(255,126,77,0) 68%)`,
+            filter: 'blur(6px)',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
+      {/* drifting particles (orbit style) */}
+      {visual === 'orbit' && active && <Particles lowTime={lowTime} />}
+
+      <svg
+        width={SIZE} height={SIZE} viewBox="0 0 100 100"
+        className={visual === 'breathe' && active ? 'xf-ring-breathe' : 'timer-ring'}
+        style={visual === 'breathe' && active ? undefined : { transform: 'rotate(-90deg)', transformOrigin: 'center', transition: 'stroke-dashoffset 1s linear' }}
+      >
+        <defs>
+          <linearGradient id="xf-timer-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={c1} />
+            <stop offset="100%" stopColor={c2} />
+          </linearGradient>
+          <clipPath id="xf-liquid-clip">
+            <circle cx="50" cy="50" r="44" />
+          </clipPath>
+        </defs>
+
+        {/* track */}
+        <circle cx="50" cy="50" r={R} fill="none" stroke="rgba(43,47,68,0.06)" strokeWidth="3" />
+
+        {/* LIQUID FILL */}
+        {visual === 'liquid' && (
+          <LiquidFill progress={mode === 'flow' ? 0.5 : progress} active={active} c1={c1} c2={c2} flow={mode === 'flow'} />
+        )}
+
+        {/* progress ring (all styles except pure liquid use a thin ring too) */}
+        <g
+          className={visual === 'gradient' && active ? 'xf-grad-rot' : undefined}
+          style={{ transformOrigin: 'center' }}
+        >
+          <circle
+            cx="50" cy="50" r={R}
+            fill="none"
+            stroke="url(#xf-timer-grad)"
+            strokeWidth={visual === 'liquid' ? 2.5 : 3.5}
+            strokeLinecap="round"
+            strokeDasharray={CIRCUM}
+            strokeDashoffset={ringOffset}
+            style={{ transition: 'stroke-dashoffset 1s linear' }}
+          />
+        </g>
+
+        {/* ORBIT progress dot + comet trail */}
+        {visual === 'orbit' && mode !== 'flow' && active && (
+          <circle cx={dotX} cy={dotY} r="3.2" fill="var(--surface)" stroke="url(#xf-timer-grad)" strokeWidth="2" />
+        )}
+        {visual === 'orbit' && mode === 'flow' && active && (
+          <g className="xf-orbit" style={{ transformOrigin: 'center' }}>
+            <circle cx="50" cy={50 - R} r="2.8" fill="url(#xf-timer-grad)" />
+          </g>
+        )}
+      </svg>
+
+      {/* center readout */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <span
+          className="tabular-nums"
+          style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 50, letterSpacing: '-0.04em', color: overtime ? 'var(--coral-deep)' : 'var(--ink)' }}
+        >
+          {display}
+        </span>
+        <span className="text-[11px] font-bold uppercase mt-0.5" style={{ letterSpacing: '0.28em', color: 'var(--ink-3)' }}>
+          {stateLabel}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/* Liquid surface that rises with progress, with two offset waves. */
+function LiquidFill({ progress, active, c1, c2, flow }) {
+  // surface y in the 0..100 viewbox; 94 = empty, 6 = full
+  const level = 94 - progress * 88
+  // a wave path drawn twice as wide so it can slide via translateX(-50%)
+  const wavePath = useMemo(() => {
+    const amp = 2.2
+    const baseW = 100
+    let d = `M 0 ${level} `
+    for (let x = 0; x <= baseW * 2; x += 10) {
+      const y = level + Math.sin((x / baseW) * Math.PI * 2) * amp
+      d += `L ${x} ${y.toFixed(2)} `
+    }
+    d += `L ${baseW * 2} 100 L 0 100 Z`
+    return d
+  }, [level])
+
+  return (
+    <g clipPath="url(#xf-liquid-clip)">
+      <path d={wavePath} fill="url(#xf-timer-grad)" opacity="0.22" className={active ? 'xf-wave-slow' : undefined} />
+      <path d={wavePath} fill="url(#xf-timer-grad)" opacity="0.4" className={active ? 'xf-wave' : undefined} />
+    </g>
+  )
+}
+
+/* A handful of soft particles drifting upward behind the ring. */
+function Particles({ lowTime }) {
+  const dots = useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, i) => ({
+        left: 10 + Math.random() * 80,
+        top: 35 + Math.random() * 55,
+        size: 3 + Math.random() * 5,
+        dur: 4 + Math.random() * 4,
+        delay: Math.random() * 5,
+        px: `${(Math.random() * 16 - 8).toFixed(0)}px`,
+      })),
+    []
+  )
+  const color = lowTime ? 'rgba(244,160,77,0.55)' : 'rgba(255,184,148,0.6)'
+  return (
+    <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
+      {dots.map((d, i) => (
+        <span
+          key={i}
+          className="xf-particle absolute rounded-full"
+          style={{
+            left: `${d.left}%`,
+            top: `${d.top}%`,
+            width: d.size,
+            height: d.size,
+            background: color,
+            '--xf-dur': `${d.dur}s`,
+            '--xf-delay': `${d.delay}s`,
+            '--xf-px': d.px,
+          }}
+        />
+      ))}
     </div>
   )
 }
