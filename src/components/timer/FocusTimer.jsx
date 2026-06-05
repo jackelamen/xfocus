@@ -3,7 +3,7 @@ import { useTimerStore } from '../../store/timerStore.js'
 import { formatTime } from '../../lib/utils.js'
 import TaskSelector from './TaskSelector.jsx'
 import TimerFace, { TIMER_STYLES, STYLE_STORAGE_KEY } from './TimerFace.jsx'
-import TimerStylePicker from './TimerStylePicker.jsx'
+import TimerStyleGrid from './TimerStyleGrid.jsx'
 
 const MODES = [
   { id: 'pomodoro', label: 'Pomodoro' },
@@ -115,7 +115,8 @@ export default function FocusTimer({ onComplete, user }) {
         size={230}
       />
 
-      {/* Settings (timer style lives here, no longer always-visible) */}
+      {/* Timer style — tucked behind a compact button; the panel shows all
+          styles in a wrapped grid (no horizontal scrolling). */}
       <div className="relative" ref={settingsRef}>
         <button
           onClick={() => setSettingsOpen(o => !o)}
@@ -131,11 +132,11 @@ export default function FocusTimer({ onComplete, user }) {
 
         {settingsOpen && (
           <div
-            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 p-3 rounded-2xl"
-            style={{ width: 'min(320px, 86vw)', background: 'var(--surface)', boxShadow: 'var(--shadow)', border: '1px solid var(--line)' }}
+            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-30 p-3 rounded-2xl"
+            style={{ width: 'min(340px, 86vw)', background: 'var(--surface)', boxShadow: 'var(--shadow)', border: '1px solid var(--line)' }}
           >
             <p className="text-[11px] font-extrabold uppercase tracking-wider mb-2 px-1" style={{ color: 'var(--ink-3)' }}>Timer style</p>
-            <TimerStylePicker value={tStyle} onChange={(id) => { pickStyle(id); setSettingsOpen(false) }} theme="light" />
+            <TimerStyleGrid value={tStyle} onChange={(id) => { pickStyle(id); setSettingsOpen(false) }} theme="light" />
           </div>
         )}
       </div>

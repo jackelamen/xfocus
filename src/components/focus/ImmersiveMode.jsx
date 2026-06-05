@@ -3,7 +3,7 @@ import { useTimerStore } from '../../store/timerStore.js'
 import { useFocusStore } from '../../store/focusStore.js'
 import { formatTime, startAmbient } from '../../lib/utils.js'
 import TimerFace, { TIMER_STYLES, STYLE_STORAGE_KEY } from '../timer/TimerFace.jsx'
-import TimerStylePicker from '../timer/TimerStylePicker.jsx'
+import TimerStyleGrid from '../timer/TimerStyleGrid.jsx'
 
 const SOUNDS = [
   { id: 'off',   icon: 'volume_off',   label: 'Silent' },
@@ -222,7 +222,7 @@ export default function ImmersiveMode({ onExit, onComplete }) {
         )}
       </div>
 
-      {/* Settings (timer style lives here, no longer always-visible) */}
+      {/* Timer style — behind a compact button; panel shows a wrapped grid */}
       <div className="mt-5 relative" ref={settingsRef}>
         <button
           onClick={() => setSettingsOpen(o => !o)}
@@ -238,10 +238,10 @@ export default function ImmersiveMode({ onExit, onComplete }) {
         {settingsOpen && (
           <div
             className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 p-3 rounded-2xl"
-            style={{ width: 'min(320px, 86vw)', background: '#1b1b27', boxShadow: '0 16px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ width: 'min(340px, 86vw)', background: '#1b1b27', boxShadow: '0 16px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
           >
             <p className="text-[11px] font-extrabold uppercase tracking-wider mb-2 px-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Timer style</p>
-            <TimerStylePicker value={tStyle} onChange={(id) => { pickStyle(id); setSettingsOpen(false) }} theme="dark" />
+            <TimerStyleGrid value={tStyle} onChange={(id) => { pickStyle(id); setSettingsOpen(false) }} theme="dark" />
           </div>
         )}
       </div>
