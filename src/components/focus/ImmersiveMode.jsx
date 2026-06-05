@@ -32,6 +32,33 @@ export default function ImmersiveMode({ onExit, onComplete }) {
     try { localStorage.setItem(STYLE_STORAGE_KEY, id) } catch { /* ignore */ }
   }
 
+  // Landscape "zen" mode: on a small/touch device held sideways, show only the timer.
+  const [zen, setZen] = useState(false)
+  const [zenSize, setZenSize] = useState(320)
+  const [chromeShown, setChromeShown] = useState(false)
+  useEffect(() => {
+    const evaluate = () => {
+      const w = window.innerWidth, h = window.innerHeight
+      const landscape = w > h
+      const touch = window.matchMedia('(pointer: coarse)').matches
+      const small = Math.min(w, h) <= 600   // phone-class short edge
+      const on = landscape && touch && small
+      setZen(on)
+      if (on) {
+        // Fill the height generously while leaving margins.
+        setZenSize(Math.min(h * 0.78, w * 0.5))
+        setChromeShown(false)
+      }
+    }
+    evaluate()
+    window.addEventListener('resize', evaluate)
+    window.addEventListener('orientationchange', evaluate)
+    return () => {
+      window.removeEventListener('resize', evaluate)
+      window.removeEventListener('orientationchange', evaluate)
+    }
+  }, [])
+
   // Settings popover (timer-style switcher lives here, not always-visible)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsRef = useRef(null)
@@ -67,6 +94,67 @@ export default function ImmersiveMode({ onExit, onComplete }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onExit])
+
+  // ── Zen landscape: only the timer, tap to reveal minimal controls ──
+  if (zen) {
+    return (
+      <div
+        className="xf-immersive fixed inset-0 z-50 flex items-center justify-center"
+        style={{ background: 'radial-gradient(circle at 50% 45%, #14141f 0%, #050509 75%)' }}
+        onClick={() => setChromeShown(s => !s)}
+      >
+        <TimerFace
+          style={tStyle}
+          display={display}
+          progress={progress}
+          running={running}
+          overtime={overtime}
+          stateLabel={overtime ? 'still going' : running ? 'focus' : idle ? 'ready' : 'paused'}
+          theme="dark"
+          size={zenSize}
+        />
+
+        {/* Minimal controls — revealed on tap, hidden otherwise */}
+        <div
+          className="absolute inset-x-0 bottom-6 flex items-center justify-center gap-3 transition-opacity duration-300"
+          style={{ opacity: chromeShown ? 1 : 0, pointerEvents: chromeShown ? 'auto' : 'none' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => (running ? pause() : start(onComplete))}
+            className="flex items-center gap-2 px-7 py-3 rounded-2xl font-bold text-sm text-white active:scale-95"
+            style={{ background: running ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #ff7e4d, #ed5f2c)' }}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: 20 }}>{running ? 'pause' : 'play_arrow'}</span>
+            {running ? 'Pause' : idle ? 'Begin' : 'Resume'}
+          </button>
+          {!idle && (
+            <button
+              onClick={() => stop(onComplete)}
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm text-white active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #ff7e4d, #ed5f2c)' }}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: 20 }}>stop</span>
+              Stop
+            </button>
+          )}
+          <button
+            onClick={onExit}
+            className="flex items-center gap-1.5 px-4 py-3 rounded-2xl text-white/50 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.05)' }}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: 18 }}>close_fullscreen</span>
+            <span className="text-xs font-bold">Exit</span>
+          </button>
+        </div>
+
+        {/* First-time hint */}
+        {!chromeShown && (
+          <p className="absolute bottom-4 inset-x-0 text-center text-[11px] text-white/20">tap for controls</p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div
