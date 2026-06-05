@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import Logo from '../components/Logo.jsx'
 import toast from 'react-hot-toast'
 
 export default function Login() {
@@ -22,11 +23,8 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
-          <div
-            className="w-16 h-16 rounded-[20px] flex items-center justify-center mb-4"
-            style={{ background: 'linear-gradient(150deg, var(--coral), var(--peach))', boxShadow: '0 10px 26px rgba(255,155,115,0.45)' }}
-          >
-            <span className="text-white font-extrabold text-2xl" style={{ fontFamily: 'Manrope, sans-serif' }}>xF</span>
+          <div className="mb-4" style={{ filter: 'drop-shadow(0 10px 22px rgba(255,126,77,0.4))' }}>
+            <Logo size={64} variant="solid" />
           </div>
           <h1 className="text-2xl font-extrabold" style={{ fontFamily: 'Manrope, sans-serif', color: 'var(--ink)' }}>xFocus</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--ink-3)' }}>Deep work, by design.</p>

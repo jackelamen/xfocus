@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.js'
 import { useFocusStore } from '../../store/focusStore.js'
 import { levelFromXp } from '../../lib/progression.js'
+import Logo from '../Logo.jsx'
 import toast from 'react-hot-toast'
 
 const NAV = [
@@ -29,11 +30,8 @@ export default function Sidebar({ user }) {
       style={{ width: 66, background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(12px)', borderRight: '1px solid var(--line)' }}
     >
       {/* Logo */}
-      <div
-        className="mb-4 w-9 h-9 rounded-[13px] flex items-center justify-center"
-        style={{ background: 'linear-gradient(150deg, var(--coral), var(--peach))', boxShadow: '0 6px 16px rgba(255,155,115,0.45)' }}
-      >
-        <span className="text-white font-extrabold text-sm" style={{ fontFamily: 'Manrope, sans-serif' }}>xF</span>
+      <div className="mb-4" style={{ filter: 'drop-shadow(0 6px 14px rgba(255,126,77,0.35))' }}>
+        <Logo size={38} variant="solid" />
       </div>
 
       {/* Nav items */}

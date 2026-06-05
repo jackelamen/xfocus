@@ -11,14 +11,21 @@ const SOUNDS = [
 ]
 
 export default function ImmersiveMode({ onExit, onComplete }) {
-  const { secsLeft, secsTotal, running, start, pause, extend, activeBlockTitle } = useTimerStore()
+  const { mode, plannedMins, elapsedSecs, running, overtime, start, pause, stop, extend, activeBlockTitle } = useTimerStore()
   const streak = useFocusStore(s => s.streak)
   const intention = useFocusStore(s => s.intention)
 
   const [sound, setSound] = useState('off')
   const ambientRef = useRef(null)
 
-  const progress = secsTotal > 0 ? 1 - secsLeft / secsTotal : 0
+  const plannedSecs = mode === 'flow' ? 0 : plannedMins * 60
+  const remaining = Math.max(0, plannedSecs - elapsedSecs)
+  const overtimeSecs = Math.max(0, elapsedSecs - plannedSecs)
+  const progress = mode === 'flow' ? 0 : plannedSecs > 0 ? Math.min(1, elapsedSecs / plannedSecs) : 0
+  const idle = !running && elapsedSecs === 0
+  const display = mode === 'flow'
+    ? formatTime(elapsedSecs)
+    : overtime ? `+${formatTime(overtimeSecs)}` : formatTime(remaining)
 
   // Manage ambient audio lifecycle
   useEffect(() => {
@@ -101,12 +108,12 @@ export default function ImmersiveMode({ onExit, onComplete }) {
         <div className="relative flex flex-col items-center">
           <span
             className="text-6xl font-black tabular-nums text-white"
-            style={{ fontFamily: 'Manrope, sans-serif', letterSpacing: '-0.03em' }}
+            style={{ fontFamily: 'Manrope, sans-serif', letterSpacing: '-0.03em', color: overtime ? '#ffb894' : '#fff' }}
           >
-            {formatTime(secsLeft)}
+            {display}
           </span>
           <span className="text-[11px] font-bold uppercase tracking-[0.3em] mt-1 text-white/30">
-            {running ? 'breathe · focus' : 'ready'}
+            {overtime ? 'still going' : running ? 'breathe · focus' : idle ? 'ready' : 'paused'}
           </span>
           {activeBlockTitle && (
             <span className="text-xs text-orange-300/70 mt-2 max-w-[220px] text-center truncate">{activeBlockTitle}</span>
@@ -119,16 +126,26 @@ export default function ImmersiveMode({ onExit, onComplete }) {
         <button
           onClick={() => (running ? pause() : start(onComplete))}
           className="flex items-center gap-2 px-8 py-3.5 rounded-2xl font-bold text-sm text-white transition-all active:scale-95"
-          style={{ background: running ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #f97316, #ea580c)' }}
+          style={{ background: running ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #ff7e4d, #ed5f2c)' }}
         >
           <span className="material-symbols-rounded" style={{ fontSize: 20 }}>{running ? 'pause' : 'play_arrow'}</span>
-          {running ? 'Pause' : 'Begin'}
+          {running ? 'Pause' : idle ? 'Begin' : 'Resume'}
         </button>
-        {running && (
+        {!idle && (
+          <button
+            onClick={() => stop(onComplete)}
+            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-sm text-white transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #ff7e4d, #ed5f2c)' }}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: 20 }}>stop</span>
+            Stop
+          </button>
+        )}
+        {running && mode !== 'flow' && (
           <button
             onClick={() => extend(10)}
             className="px-4 py-3.5 rounded-2xl text-xs font-bold transition-all"
-            style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316', border: '1px solid rgba(249,115,22,0.2)' }}
+            style={{ background: 'rgba(255,126,77,0.12)', color: '#ffb894', border: '1px solid rgba(255,126,77,0.25)' }}
           >
             +10m
           </button>

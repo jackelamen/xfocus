@@ -14,8 +14,8 @@ export default defineConfig({
         name: 'xFocus — The EDGEx Focus',
         short_name: 'xFocus',
         description: 'Deep work timer and time blocking for The EDGEx',
-        theme_color: '#0f0f1a',
-        background_color: '#0f0f1a',
+        theme_color: '#f4f7fc',
+        background_color: '#f4f7fc',
         display: 'standalone',
         start_url: '/',
         icons: [

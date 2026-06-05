@@ -13,9 +13,9 @@
   --sky-deep:#5aa8e6;
   --lav:#cfc6f3;
   --lav-deep:#9b8fe0;
-  --peach:#ffc9a8;
-  --coral:#ff9b73;           /* accent */
-  --coral-deep:#f47a4d;
+  --peach:#ffb894;           /* slightly more saturated peach */
+  --coral:#ff7e4d;           /* accent — more vivid, still not neon */
+  --coral-deep:#ed5f2c;
 
   --line:rgba(43,47,68,0.07);
   --line-2:rgba(43,47,68,0.12);

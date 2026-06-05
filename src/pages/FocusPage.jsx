@@ -92,7 +92,7 @@ export default function FocusPage({ user }) {
 
   const timerCard = (
     <div className="rounded-[30px] pt-8 pb-7 px-6 flex flex-col items-center" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow)' }}>
-      <FocusTimer onComplete={handleTimerComplete} />
+      <FocusTimer onComplete={handleTimerComplete} user={user} />
       <button
         onClick={() => setImmersive(true)}
         className="mt-4 flex items-center gap-1.5 text-xs font-semibold transition-colors"

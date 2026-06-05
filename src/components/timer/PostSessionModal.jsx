@@ -8,7 +8,11 @@ const STARS = [1, 2, 3, 4, 5]
 
 export default function PostSessionModal({ user, sessionMeta, onClose }) {
   const saveSession = useFocusStore(s => s.saveSession)
-  const { activeBlockId, activeBlockTitle, activeTaskNames, durationMins } = useTimerStore()
+  const { activeBlockId, activeBlockTitle, activeTaskNames, selectedTaskId, selectedTaskName } = useTimerStore()
+
+  // Task names = the picked Pulse task (if any) plus any block tasks.
+  const taskNames = [selectedTaskName, ...activeTaskNames].filter(Boolean)
+  const taskIds = selectedTaskId ? [selectedTaskId] : []
 
   const [feltScore, setFeltScore] = useState(0)
   const [gotDistracted, setGotDistracted] = useState(null)
@@ -26,9 +30,12 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
       date: todayStr(),
       started_at: sessionMeta?.startedAt || null,
       ended_at: sessionMeta?.endedAt || new Date().toISOString(),
-      duration_mins: sessionMeta?.durationMins || durationMins,
+      duration_mins: sessionMeta?.durationMins || 0,
+      mode: sessionMeta?.mode || 'custom',
+      task_id: taskIds[0] || null,
+      task_ids: taskIds,
       focus_type: focusType,
-      task_names: activeTaskNames,
+      task_names: taskNames,
       completed: taskCompleted === 'yes',
       time_block_id: activeBlockId || null,
       notes: notes || null,
