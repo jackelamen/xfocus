@@ -64,7 +64,7 @@ export default function Login() {
         </form>
 
         <p className="text-center text-xs text-white/20 mt-6">
-          Uses your EDGEx account (same as xPM)
+          Sign in with your Pulse account
         </p>
       </div>
     </div>

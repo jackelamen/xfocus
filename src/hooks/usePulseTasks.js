@@ -1,6 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase.js'
 
+// Pulse priority is numeric (0=none .. 3=urgent). Map to labels the UI uses.
+const PRIORITY_LABEL = { 0: 'none', 1: 'low', 2: 'high', 3: 'urgent' }
+
+// Normalize a Pulse task row into the shape xFocus components expect.
+function normalize(t) {
+  return {
+    id: t.id,
+    title: t.title,
+    status: t.status,
+    list_id: t.list_id,
+    // Pulse stores the due date as `due_at` (timestamptz). Alias to due_date
+    // (date only) so existing components keep working.
+    due_date: t.due_at ? String(t.due_at).slice(0, 10) : null,
+    due_at: t.due_at,
+    priority: PRIORITY_LABEL[t.priority] ?? 'none',
+    priority_num: t.priority,
+  }
+}
+
 export function usePulseTasks(userId) {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(false)
@@ -11,18 +30,25 @@ export function usePulseTasks(userId) {
     setLoading(true)
     setError(null)
     try {
-      // Read from the shared 'tasks' table (Pulse's table — neutral name, no prefix)
+      // Read active tasks from Pulse's shared `tasks` table, matching Pulse's
+      // own "active task" filters: not soft-deleted, top-level (no parent),
+      // not completed, not cancelled, and not done.
       const { data, error: err } = await supabase
         .from('tasks')
-        .select('id, title, status, priority, due_date, list_id')
+        .select('id, title, status, priority, due_at, list_id, sort_order, created_at')
         .eq('user_id', userId)
-        .not('status', 'eq', 'done')
-        .order('created_at', { ascending: false })
+        .is('deleted_at', null)
+        .is('parent_task_id', null)
+        .is('completed_at', null)
+        .not('status', 'in', '("done","cancelled")')
+        .order('priority', { ascending: false })
+        .order('due_at', { ascending: true, nullsFirst: false })
+        .order('sort_order', { ascending: true })
         .limit(100)
       if (err) throw err
-      setTasks(data || [])
+      setTasks((data || []).map(normalize))
     } catch (e) {
-      // Pulse tables may not exist yet in local DB — degrade gracefully
+      // Tables/columns may differ if pointed at a DB without Pulse — degrade gracefully
       setError(e.message)
       setTasks([])
     } finally {
