@@ -18,50 +18,59 @@ export default function IntentionBar({ user }) {
     setEditing(false)
   }
 
+  const eyebrow = (
+    <div className="flex items-center gap-1.5 mb-2">
+      <span className="material-symbols-rounded" style={{ fontSize: 15, color: 'var(--coral-deep)' }}>wb_sunny</span>
+      <span className="text-[11px] font-extrabold uppercase tracking-[0.16em]" style={{ color: 'var(--coral-deep)' }}>
+        Today I will
+      </span>
+    </div>
+  )
+
+  const headlineStyle = {
+    fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 24,
+    lineHeight: 1.28, letterSpacing: '-0.015em', color: 'var(--ink)',
+  }
+
   if (editing) {
     return (
-      <div className="flex items-center gap-2 px-5 py-3 rounded-2xl" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)' }}>
-        <span className="material-symbols-rounded text-orange-400 text-lg flex-shrink-0">flag</span>
+      <div>
+        {eyebrow}
         <input
           autoFocus
           type="text"
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
-          placeholder="Today I will…"
-          className="flex-1 bg-transparent outline-none text-sm font-semibold text-white placeholder-white/30"
+          placeholder="set your intention…"
+          className="w-full bg-transparent outline-none"
+          style={{ ...headlineStyle, borderBottom: '2px solid var(--coral)', paddingBottom: 4 }}
         />
-        <button onClick={save} className="text-orange-400 font-bold text-xs px-3 py-1 rounded-lg transition-all hover:bg-orange-500/20">Save</button>
-        <button onClick={() => setEditing(false)} className="text-white/30 text-xs px-2 py-1 rounded-lg">Cancel</button>
+        <div className="mt-2.5 flex gap-2">
+          <button onClick={save} className="text-xs font-bold px-3 py-1 rounded-lg" style={{ background: 'var(--coral)', color: '#fff' }}>Save</button>
+          <button onClick={() => setEditing(false)} className="text-xs font-semibold px-2 py-1" style={{ color: 'var(--ink-3)' }}>Cancel</button>
+        </div>
       </div>
     )
   }
 
   if (intention?.text) {
     return (
-      <button
-        onClick={() => setEditing(true)}
-        className="flex items-center gap-3 px-5 py-3 rounded-2xl text-left w-full transition-all group hover:bg-white/5"
-        style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.15)' }}
-      >
-        <span className="material-symbols-rounded text-orange-400 text-lg flex-shrink-0">flag</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-orange-400/60 mb-0.5">Today's Intention</p>
-          <p className="text-sm font-semibold text-white/90 truncate">{intention.text}</p>
-        </div>
-        <span className="material-symbols-rounded text-white/20 group-hover:text-white/40 transition-colors" style={{ fontSize: 16 }}>edit</span>
+      <button onClick={() => setEditing(true)} className="text-left w-full">
+        {eyebrow}
+        <h1 style={headlineStyle}>{intention.text}</h1>
+        <span className="inline-flex items-center gap-1.5 mt-2 text-[13px]" style={{ color: 'var(--ink-3)' }}>
+          <span className="material-symbols-rounded" style={{ fontSize: 14 }}>edit</span>
+          edit intention
+        </span>
       </button>
     )
   }
 
   return (
-    <button
-      onClick={() => setEditing(true)}
-      className="flex items-center gap-3 px-5 py-3 rounded-2xl w-full transition-all hover:bg-white/5"
-      style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)' }}
-    >
-      <span className="material-symbols-rounded text-white/20 text-lg">flag</span>
-      <span className="text-sm text-white/30 italic">Set today's intention…</span>
+    <button onClick={() => setEditing(true)} className="text-left w-full">
+      {eyebrow}
+      <h1 style={{ ...headlineStyle, color: 'var(--ink-4)' }}>Set today's intention…</h1>
     </button>
   )
 }

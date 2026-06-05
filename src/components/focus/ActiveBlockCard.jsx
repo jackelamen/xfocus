@@ -41,27 +41,32 @@ export default function ActiveBlockCard() {
 
   return (
     <div
-      className="rounded-2xl p-4 flex items-center gap-4"
-      style={{ background: `${block.color}15`, border: `1px solid ${block.color}30` }}
+      className="rounded-[18px] p-[13px] flex items-center gap-3 mb-6"
+      style={{ background: 'linear-gradient(120deg, rgba(169,212,245,0.32), rgba(207,198,243,0.28))' }}
     >
-      <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: block.color }} />
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-sm)', color: 'var(--sky-deep)' }}
+      >
+        <span className="material-symbols-rounded" style={{ fontSize: 19 }}>calendar_view_day</span>
+      </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-widest mb-0.5" style={{ color: `${block.color}90` }}>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] mb-0.5" style={{ color: 'var(--sky-deep)' }}>
           {currentBlock ? 'Now' : 'Up next'}
         </p>
-        <p className="text-sm font-bold text-white truncate">{block.title}</p>
+        <p className="text-sm font-bold truncate" style={{ color: 'var(--ink)' }}>{block.title}</p>
         {block.task_names?.length > 0 && (
-          <p className="text-xs text-white/40 truncate mt-0.5">{block.task_names.join(', ')}</p>
+          <p className="text-xs truncate mt-0.5" style={{ color: 'var(--ink-2)' }}>{block.task_names.join(', ')}</p>
         )}
-        <p className="text-xs text-white/30 mt-0.5">{block.start_time.slice(0,5)} – {block.end_time.slice(0,5)}</p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{block.start_time.slice(0,5)} – {block.end_time.slice(0,5)}</p>
       </div>
       <button
         onClick={focusNow}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white flex-shrink-0 transition-all active:scale-95"
-        style={{ background: block.color }}
+        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+        style={{ background: 'linear-gradient(150deg, var(--coral), var(--peach))', color: '#fff', boxShadow: '0 6px 14px rgba(255,155,115,0.45)' }}
+        title="Focus on this block"
       >
-        <span className="material-symbols-rounded" style={{ fontSize: 15 }}>play_arrow</span>
-        Focus
+        <span className="material-symbols-rounded" style={{ fontSize: 21 }}>play_arrow</span>
       </button>
     </div>
   )

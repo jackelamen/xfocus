@@ -23,10 +23,10 @@ function AuthGate() {
   }, [user])
 
   if (loading) return (
-    <div className="flex items-center justify-center h-screen" style={{ background: '#0f0f1a' }}>
+    <div className="xf-canvas flex items-center justify-center h-screen">
       <div className="text-center">
-        <div className="w-10 h-10 rounded-full border-2 border-orange-500 border-t-transparent animate-spin mx-auto mb-4" />
-        <p className="text-sm font-medium text-white/40">Loading xFocus…</p>
+        <div className="w-10 h-10 rounded-full border-2 animate-spin mx-auto mb-4" style={{ borderColor: 'var(--coral)', borderTopColor: 'transparent' }} />
+        <p className="text-sm font-medium" style={{ color: 'var(--ink-3)' }}>Loading xFocus…</p>
       </div>
     </div>
   )
@@ -34,7 +34,7 @@ function AuthGate() {
   if (!user) return <Login />
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#0f0f1a' }}>
+    <div className="xf-canvas flex h-screen overflow-hidden">
       <Sidebar user={user} />
       <main className="flex-1 overflow-hidden">
         <Routes>
@@ -55,7 +55,7 @@ export default function App() {
       <Toaster
         position="top-right"
         toastOptions={{
-          style: { background: '#1a1a2e', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' },
+          style: { background: '#ffffff', color: '#2b2f44', border: '1px solid rgba(43,47,68,0.08)', borderRadius: '14px', boxShadow: '0 10px 30px rgba(91,110,160,0.16)' },
         }}
       />
       <Routes>

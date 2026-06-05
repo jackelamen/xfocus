@@ -45,11 +45,11 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
-      <div className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(43,47,68,0.45)', backdropFilter: 'blur(4px)' }}>
+      <div className="w-full max-w-md rounded-[26px] overflow-hidden" style={{ background: 'var(--surface)', boxShadow: '0 30px 70px rgba(70,90,140,0.35)' }}>
 
         {/* Header */}
-        <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }}>
+        <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg, var(--coral), var(--peach))' }}>
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2 mb-0.5">
@@ -74,7 +74,7 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
 
           {/* Focus quality */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--ink-3)' }}>
               How focused did you feel?
             </label>
             <div className="flex gap-2">
@@ -85,8 +85,8 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
                   className="flex-1 py-2.5 rounded-xl font-black text-sm transition-all"
                   style={
                     feltScore >= n
-                      ? { background: 'rgba(249,115,22,0.2)', color: '#f97316', border: '1.5px solid #f97316' }
-                      : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.25)', border: '1.5px solid rgba(255,255,255,0.06)' }
+                      ? { background: 'rgba(255,155,115,0.16)', color: 'var(--coral-deep)', border: '1.5px solid var(--coral)' }
+                      : { background: 'var(--canvas)', color: 'var(--ink-4)', border: '1.5px solid transparent' }
                   }
                 >
                   {['😔', '😐', '🙂', '😊', '🔥'][n - 1]}
@@ -101,7 +101,7 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
 
           {/* Distracted? */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--ink-3)' }}>
               Did you get distracted?
             </label>
             <div className="flex gap-2">
@@ -112,8 +112,10 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all"
                   style={
                     gotDistracted === v
-                      ? { background: v ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)', color: v ? '#ef4444' : '#10b981', border: `1.5px solid ${v ? '#ef4444' : '#10b981'}` }
-                      : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1.5px solid rgba(255,255,255,0.06)' }
+                      ? (v
+                          ? { background: 'rgba(155,143,224,0.15)', color: 'var(--lav-deep)', border: '1.5px solid var(--lav-deep)' }
+                          : { background: 'rgba(90,168,230,0.15)', color: 'var(--sky-deep)', border: '1.5px solid var(--sky-deep)' })
+                      : { background: 'var(--canvas)', color: 'var(--ink-3)', border: '1.5px solid transparent' }
                   }
                 >
                   {label}
@@ -122,13 +124,13 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
             </div>
             {gotDistracted && (
               <div className="mt-2 flex items-center gap-2">
-                <span className="text-xs text-white/40">How many times?</span>
+                <span className="text-xs" style={{ color: 'var(--ink-3)' }}>How many times?</span>
                 <input
                   type="number" min="1" max="20"
                   value={distractionCount}
                   onChange={e => setDistractionCount(parseInt(e.target.value) || 0)}
-                  className="w-16 rounded-lg px-3 py-1.5 text-sm text-center font-bold text-white"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  className="w-16 rounded-lg px-3 py-1.5 text-sm text-center font-bold"
+                  style={{ background: 'var(--canvas)', color: 'var(--ink)', border: '1px solid var(--line-2)' }}
                 />
               </div>
             )}
@@ -136,7 +138,7 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
 
           {/* Task completed? */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--ink-3)' }}>
               Did you complete the task?
             </label>
             <div className="flex gap-2">
@@ -147,8 +149,8 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all"
                   style={
                     taskCompleted === v
-                      ? { background: 'rgba(249,115,22,0.15)', color: '#f97316', border: '1.5px solid #f97316' }
-                      : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1.5px solid rgba(255,255,255,0.06)' }
+                      ? { background: 'rgba(255,155,115,0.16)', color: 'var(--coral-deep)', border: '1.5px solid var(--coral)' }
+                      : { background: 'var(--canvas)', color: 'var(--ink-3)', border: '1.5px solid transparent' }
                   }
                 >
                   {label}
@@ -159,7 +161,7 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
 
           {/* Would repeat? */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--ink-3)' }}>
               Would you repeat this block?
             </label>
             <div className="flex gap-2">
@@ -170,8 +172,8 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
                   className="flex-1 py-2.5 rounded-xl font-bold text-sm transition-all"
                   style={
                     wouldRepeat === v
-                      ? { background: 'rgba(249,115,22,0.15)', color: '#f97316', border: '1.5px solid #f97316' }
-                      : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1.5px solid rgba(255,255,255,0.06)' }
+                      ? { background: 'rgba(255,155,115,0.16)', color: 'var(--coral-deep)', border: '1.5px solid var(--coral)' }
+                      : { background: 'var(--canvas)', color: 'var(--ink-3)', border: '1.5px solid transparent' }
                   }
                 >
                   {label}
@@ -182,14 +184,14 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
 
           {/* Focus type */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--ink-3)' }}>
               Focus type
             </label>
             <select
               value={focusType}
               onChange={e => setFocusType(e.target.value)}
-              className="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-white"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="w-full rounded-xl px-4 py-2.5 text-sm font-medium"
+              style={{ background: 'var(--canvas)', color: 'var(--ink)', border: '1px solid var(--line-2)' }}
             >
               {FOCUS_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
@@ -197,7 +199,7 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--ink-3)' }}>
               Notes (optional)
             </label>
             <textarea
@@ -205,8 +207,8 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
               onChange={e => setNotes(e.target.value)}
               placeholder="Key wins, blockers, next steps…"
               rows={3}
-              className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/20 resize-none"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="w-full rounded-xl px-4 py-3 text-sm resize-none"
+              style={{ background: 'var(--canvas)', color: 'var(--ink)', border: '1px solid var(--line-2)' }}
             />
           </div>
         </div>
@@ -217,7 +219,7 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
             onClick={handleSave}
             disabled={saving || feltScore === 0}
             className="flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all disabled:opacity-40"
-            style={{ background: '#f97316' }}
+            style={{ background: 'linear-gradient(150deg, var(--coral), var(--coral-deep))', boxShadow: 'var(--shadow-coral)' }}
           >
             {saving
               ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -227,7 +229,7 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
           <button
             onClick={onClose}
             className="px-5 py-3 rounded-xl font-bold text-sm transition-all"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}
+            style={{ background: 'var(--canvas)', color: 'var(--ink-2)' }}
           >
             Skip
           </button>
