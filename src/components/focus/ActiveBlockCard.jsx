@@ -22,7 +22,7 @@ function getNextBlock(blocks) {
     .sort((a, b) => a.start_time.localeCompare(b.start_time))[0]
 }
 
-export default function ActiveBlockCard() {
+export default function ActiveBlockCard({ wrapClass = '' }) {
   const blocks = useBlocksStore(s => s.blocks)
   const viewDate = useBlocksStore(s => s.viewDate)
   const setActiveBlock = useTimerStore(s => s.setActiveBlock)
@@ -41,7 +41,7 @@ export default function ActiveBlockCard() {
 
   return (
     <div
-      className="rounded-[18px] p-[13px] flex items-center gap-3 mb-6"
+      className={`rounded-[18px] p-[13px] flex items-center gap-3 w-full ${wrapClass}`}
       style={{ background: 'linear-gradient(120deg, rgba(169,212,245,0.32), rgba(207,198,243,0.28))' }}
     >
       <div
