@@ -34,7 +34,7 @@ export default function ImmersiveMode({ onExit, onComplete }) {
 
   // Landscape "zen" mode: on a small/touch device held sideways, show only the timer.
   const [zen, setZen] = useState(false)
-  const [zenSize, setZenSize] = useState(320)
+  const [zenViewport, setZenViewport] = useState({ w: 800, h: 360 })
   const [chromeShown, setChromeShown] = useState(false)
   useEffect(() => {
     const evaluate = () => {
@@ -45,8 +45,7 @@ export default function ImmersiveMode({ onExit, onComplete }) {
       const on = landscape && touch && small
       setZen(on)
       if (on) {
-        // Fill the height generously while leaving margins.
-        setZenSize(Math.min(h * 0.78, w * 0.5))
+        setZenViewport({ w, h })
         setChromeShown(false)
       }
     }
@@ -95,8 +94,29 @@ export default function ImmersiveMode({ onExit, onComplete }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onExit])
 
+  // Request true device fullscreen while Focus mode is open (best-effort).
+  useEffect(() => {
+    const el = document.documentElement
+    const req = el.requestFullscreen || el.webkitRequestFullscreen
+    if (req) { try { Promise.resolve(req.call(el)).catch(() => {}) } catch { /* ignore */ } }
+    return () => {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen
+      if (exit && (document.fullscreenElement || document.webkitFullscreenElement)) {
+        try { Promise.resolve(exit.call(document)).catch(() => {}) } catch { /* ignore */ }
+      }
+    }
+  }, [])
+
   // ── Zen landscape: only the timer, tap to reveal minimal controls ──
   if (zen) {
+    const { w, h } = zenViewport
+    // Flip + Digital read as desk clocks → blow them up to fill the viewport.
+    // The face box is square, so cap by height; a `fill` flag enlarges the
+    // glyphs inside so the time spans the width. Other faces stay modest.
+    const bigFace = tStyle === 'flip' || tStyle === 'digital'
+    const zenSize = bigFace
+      ? Math.min(h * 0.96, w * 0.62)
+      : Math.min(h * 0.82, w * 0.5)
     return (
       <div
         className="xf-immersive fixed inset-0 z-50 flex items-center justify-center"
@@ -112,6 +132,7 @@ export default function ImmersiveMode({ onExit, onComplete }) {
           stateLabel={overtime ? 'still going' : running ? 'focus' : idle ? 'ready' : 'paused'}
           theme="dark"
           size={zenSize}
+          fill={bigFace}
         />
 
         {/* Minimal controls — revealed on tap, hidden otherwise */}

@@ -35,13 +35,14 @@ export default function TimerFace({
   stateLabel = '',
   theme = 'light',
   size = 230,
+  fill = false,
 }) {
   const dark = theme === 'dark'
   const ink = dark ? '#fff' : 'var(--ink)'
   const inkSoft = dark ? 'rgba(255,255,255,0.3)' : 'var(--ink-3)'
   const overtimeColor = dark ? '#ffb894' : 'var(--coral-deep)'
 
-  const common = { display, progress, running, overtime, stateLabel, dark, ink, inkSoft, overtimeColor, size }
+  const common = { display, progress, running, overtime, stateLabel, dark, ink, inkSoft, overtimeColor, size, fill }
 
   switch (style) {
     case 'digital':  return <DigitalFace {...common} />
@@ -66,7 +67,7 @@ function Caption({ stateLabel, inkSoft }) {
 }
 
 /* ====================== DIGITAL ====================== */
-function DigitalFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColor, running, size }) {
+function DigitalFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColor, running, size, fill }) {
   return (
     <div className="relative flex flex-col items-center justify-center" style={{ width: size, height: size }}>
       <span
@@ -74,7 +75,7 @@ function DigitalFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColo
         style={{
           fontFamily: 'Manrope, sans-serif',
           fontWeight: 800,
-          fontSize: size * 0.27,
+          fontSize: size * (fill ? 0.44 : 0.27),
           letterSpacing: '-0.04em',
           color: overtime ? overtimeColor : ink,
           textShadow: running ? `0 0 26px ${overtime ? 'rgba(255,184,148,0.5)' : 'rgba(255,126,77,0.45)'}` : 'none',
@@ -89,15 +90,15 @@ function DigitalFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColo
 }
 
 /* ====================== FLIP CLOCK ====================== */
-function FlipFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColor, dark, size }) {
+function FlipFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColor, dark, size, fill }) {
   // display can be "24:31" or "+01:12" — strip any leading +
   const plus = display.startsWith('+')
   const clean = plus ? display.slice(1) : display
   const chars = clean.split('') // e.g. ['2','4',':','3','1']
   const cardBg = dark ? 'linear-gradient(180deg,#23232f,#14141d)' : 'linear-gradient(180deg,#ffffff,#eef1f8)'
   const cardColor = overtime ? overtimeColor : ink
-  const cardW = size * 0.16
-  const cardH = size * 0.24
+  const cardW = size * (fill ? 0.26 : 0.16)
+  const cardH = size * (fill ? 0.40 : 0.24)
   return (
     <div className="relative flex flex-col items-center justify-center" style={{ width: size, height: size }}>
       <div className="flex items-center" style={{ gap: size * 0.012 }}>
