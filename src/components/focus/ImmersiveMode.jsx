@@ -32,6 +32,17 @@ export default function ImmersiveMode({ onExit, onComplete }) {
     try { localStorage.setItem(STYLE_STORAGE_KEY, id) } catch { /* ignore */ }
   }
 
+  // Settings popover (timer-style switcher lives here, not always-visible)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsRef = useRef(null)
+  useEffect(() => {
+    if (!settingsOpen) return
+    const onDown = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setSettingsOpen(false) }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [settingsOpen])
+  const activeStyleLabel = TIMER_STYLES.find(t => t.id === tStyle)?.label || 'Timer style'
+
   const plannedSecs = mode === 'flow' ? 0 : plannedMins * 60
   const remaining = Math.max(0, plannedSecs - elapsedSecs)
   const overtimeSecs = Math.max(0, elapsedSecs - plannedSecs)
@@ -102,9 +113,28 @@ export default function ImmersiveMode({ onExit, onComplete }) {
         )}
       </div>
 
-      {/* Style switcher */}
-      <div className="mt-5">
-        <TimerStylePicker value={tStyle} onChange={pickStyle} theme="dark" />
+      {/* Settings (timer style lives here, no longer always-visible) */}
+      <div className="mt-5 relative" ref={settingsRef}>
+        <button
+          onClick={() => setSettingsOpen(o => !o)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+          style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.55)' }}
+          aria-expanded={settingsOpen}
+        >
+          <span className="material-symbols-rounded" style={{ fontSize: 16 }}>tune</span>
+          <span>{activeStyleLabel}</span>
+          <span className="material-symbols-rounded" style={{ fontSize: 16 }}>{settingsOpen ? 'expand_less' : 'expand_more'}</span>
+        </button>
+
+        {settingsOpen && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 p-3 rounded-2xl"
+            style={{ width: 'min(320px, 86vw)', background: '#1b1b27', boxShadow: '0 16px 40px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <p className="text-[11px] font-extrabold uppercase tracking-wider mb-2 px-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Timer style</p>
+            <TimerStylePicker value={tStyle} onChange={(id) => { pickStyle(id); setSettingsOpen(false) }} theme="dark" />
+          </div>
+        )}
       </div>
 
       {/* Controls */}
