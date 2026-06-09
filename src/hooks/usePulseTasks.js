@@ -41,8 +41,9 @@ export function usePulseTasks(userId) {
         .is('parent_task_id', null)
         .is('completed_at', null)
         .not('status', 'in', '("done","cancelled")')
-        .order('priority', { ascending: false })
-        .order('due_at', { ascending: true, nullsFirst: false })
+        // Due date ascending, tasks with no due date first; sort_order as tiebreak.
+        // (Final ordering is enforced client-side in the panel too.)
+        .order('due_at', { ascending: true, nullsFirst: true })
         .order('sort_order', { ascending: true })
         .limit(100)
       if (err) throw err

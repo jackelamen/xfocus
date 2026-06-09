@@ -10,6 +10,34 @@ export function tomorrowStr() {
   return format(d, 'yyyy-MM-dd')
 }
 
+// Classify a yyyy-MM-dd due date string into a bucket relative to today.
+// Returns 'none' | 'overdue' | 'today' | 'tomorrow' | 'week' | 'later'.
+// "week" = within the next 7 days (after tomorrow). Overdue counts as 'today'
+// for filtering purposes so past-due items surface with today's work.
+export function dueBucket(dueDateStr) {
+  if (!dueDateStr) return 'none'
+  const today = todayStr()
+  const tomorrow = tomorrowStr()
+  if (dueDateStr < today) return 'overdue'
+  if (dueDateStr === today) return 'today'
+  if (dueDateStr === tomorrow) return 'tomorrow'
+  const in7 = new Date()
+  in7.setDate(in7.getDate() + 7)
+  const weekEnd = format(in7, 'yyyy-MM-dd')
+  if (dueDateStr <= weekEnd) return 'week'
+  return 'later'
+}
+
+// Short human label for a due date string (e.g. "Today", "Tomorrow", "Jun 14").
+export function dueLabel(dueDateStr) {
+  if (!dueDateStr) return null
+  const b = dueBucket(dueDateStr)
+  if (b === 'today') return 'Today'
+  if (b === 'tomorrow') return 'Tomorrow'
+  if (b === 'overdue') return `Overdue · ${format(new Date(dueDateStr), 'MMM d')}`
+  return format(new Date(dueDateStr), 'MMM d')
+}
+
 export function formatMinutes(mins) {
   if (mins < 60) return `${mins}m`
   const h = Math.floor(mins / 60)

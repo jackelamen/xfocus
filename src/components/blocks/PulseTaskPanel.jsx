@@ -1,6 +1,15 @@
 import React, { useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import { usePulseTasks } from '../../hooks/usePulseTasks.js'
+import { dueBucket, dueLabel } from '../../lib/utils.js'
+
+// Filter chips → the due buckets each one matches.
+const DUE_FILTERS = [
+  { id: 'today',    label: 'Due today',     buckets: ['today', 'overdue'] },
+  { id: 'tomorrow', label: 'Due tomorrow',  buckets: ['tomorrow'] },
+  { id: 'week',     label: 'Due this week', buckets: ['week'] },
+  { id: 'later',    label: 'Due later',     buckets: ['later'] },
+]
 
 function DraggableTask({ task }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -25,8 +34,12 @@ function DraggableTask({ task }) {
       <span className="material-symbols-rounded" style={{ fontSize: 14, color: 'var(--ink-4)' }}>drag_indicator</span>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>{task.title}</p>
-        {task.due_date && (
-          <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-3)' }}>{task.due_date}</p>
+        {task.due_date ? (
+          <p className="text-[10px] mt-0.5" style={{ color: dueBucket(task.due_date) === 'overdue' ? 'var(--coral-deep)' : 'var(--ink-3)' }}>
+            {dueLabel(task.due_date)}
+          </p>
+        ) : (
+          <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-4)' }}>No due date</p>
         )}
       </div>
       {task.priority && task.priority !== 'none' && (
@@ -44,8 +57,32 @@ function DraggableTask({ task }) {
 export default function PulseTaskPanel({ userId, onClose }) {
   const { tasks, loading, error, refresh } = usePulseTasks(userId)
   const [search, setSearch] = useState('')
+  const [dueFilters, setDueFilters] = useState([])   // multi-select bucket ids
 
-  const filtered = tasks.filter(t => t.title.toLowerCase().includes(search.toLowerCase()))
+  function toggleFilter(id) {
+    setDueFilters(cur => cur.includes(id) ? cur.filter(f => f !== id) : [...cur, id])
+  }
+
+  // Buckets allowed by the active filters (empty selection = all).
+  const activeBuckets = dueFilters.length
+    ? new Set(DUE_FILTERS.filter(f => dueFilters.includes(f.id)).flatMap(f => f.buckets))
+    : null
+
+  // Sort: no due date first, then ascending by due date.
+  const sorted = [...tasks].sort((a, b) => {
+    if (!a.due_date && !b.due_date) return 0
+    if (!a.due_date) return -1
+    if (!b.due_date) return 1
+    return a.due_date < b.due_date ? -1 : a.due_date > b.due_date ? 1 : 0
+  })
+
+  const filtered = sorted.filter(t => {
+    if (!t.title.toLowerCase().includes(search.toLowerCase())) return false
+    if (!activeBuckets) return true
+    // Undated tasks stay visible (they're unscheduled and most draggable).
+    if (!t.due_date) return true
+    return activeBuckets.has(dueBucket(t.due_date))
+  })
 
   return (
     <div
@@ -84,6 +121,35 @@ export default function PulseTaskPanel({ userId, onClose }) {
             className="w-full pl-8 pr-3 py-2 rounded-xl text-xs font-medium outline-none"
             style={{ background: 'var(--surface)', color: 'var(--ink)', border: '1px solid var(--line-2)' }}
           />
+        </div>
+        {/* Multi-select due-date filters */}
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {DUE_FILTERS.map(f => {
+            const on = dueFilters.includes(f.id)
+            return (
+              <button
+                key={f.id}
+                onClick={() => toggleFilter(f.id)}
+                className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                style={on
+                  ? { background: 'linear-gradient(150deg, var(--coral), var(--peach))', color: '#fff' }
+                  : { background: 'var(--surface)', color: 'var(--ink-3)', border: '1px solid var(--line-2)' }}
+                aria-pressed={on}
+              >
+                {f.label}
+              </button>
+            )
+          })}
+          {dueFilters.length > 0 && (
+            <button
+              onClick={() => setDueFilters([])}
+              className="px-2 py-1 rounded-lg text-[10px] font-bold transition-all"
+              style={{ color: 'var(--ink-4)' }}
+              title="Clear filters"
+            >
+              Clear
+            </button>
+          )}
         </div>
         {error && (
           <p className="text-[10px] mt-2" style={{ color: 'var(--ink-3)' }}>Pulse tasks unavailable. Check your connection or login.</p>
