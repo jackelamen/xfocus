@@ -10,6 +10,38 @@ export function tomorrowStr() {
   return format(d, 'yyyy-MM-dd')
 }
 
+// Parse a yyyy-MM-dd string as a LOCAL date (new Date('2026-07-29') is UTC and
+// can land on the previous day west of Greenwich).
+export function parseDateStr(dateStr) {
+  const [y, m, d] = String(dateStr).split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+// Shift a yyyy-MM-dd string by n days.
+export function addDaysStr(dateStr, n) {
+  const d = parseDateStr(dateStr)
+  d.setDate(d.getDate() + n)
+  return format(d, 'yyyy-MM-dd')
+}
+
+// Monday of the week containing dateStr.
+export function weekStartStr(dateStr) {
+  const d = parseDateStr(dateStr)
+  const dow = (d.getDay() + 6) % 7   // Mon=0 … Sun=6
+  d.setDate(d.getDate() - dow)
+  return format(d, 'yyyy-MM-dd')
+}
+
+// "Mon", "Tue", …
+export function weekdayShort(dateStr) {
+  return format(parseDateStr(dateStr), 'EEE')
+}
+
+// "Jul 29"
+export function monthDayShort(dateStr) {
+  return format(parseDateStr(dateStr), 'MMM d')
+}
+
 // Classify a yyyy-MM-dd due date string into a bucket relative to today.
 // Returns 'none' | 'overdue' | 'today' | 'tomorrow' | 'week' | 'later'.
 // "week" = within the next 7 days (after tomorrow). Overdue counts as 'today'
@@ -34,8 +66,8 @@ export function dueLabel(dueDateStr) {
   const b = dueBucket(dueDateStr)
   if (b === 'today') return 'Today'
   if (b === 'tomorrow') return 'Tomorrow'
-  if (b === 'overdue') return `Overdue · ${format(new Date(dueDateStr), 'MMM d')}`
-  return format(new Date(dueDateStr), 'MMM d')
+  if (b === 'overdue') return `Overdue · ${format(parseDateStr(dueDateStr), 'MMM d')}`
+  return format(parseDateStr(dueDateStr), 'MMM d')
 }
 
 export function formatMinutes(mins) {

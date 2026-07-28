@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useBlocksStore } from '../../store/blocksStore.js'
 import { FOCUS_TYPES, BLOCK_COLORS } from '../../lib/utils.js'
+import BlockTasks from './BlockTasks.jsx'
 import toast from 'react-hot-toast'
 
 export default function BlockForm({ user, initial, onClose }) {
@@ -17,12 +18,26 @@ export default function BlockForm({ user, initial, onClose }) {
   const [focusType, setFocusType] = useState(initial?.focus_type || 'Other')
   const [notes, setNotes] = useState(initial?.notes || '')
   const [saving, setSaving] = useState(false)
+  // Task edits are staged locally and committed with the rest of the form.
+  const [taskSet, setTaskSet] = useState({
+    task_ids: initial?.task_ids || [],
+    task_names: initial?.task_names || [],
+  })
 
   async function handleSave() {
     if (!title.trim()) { toast.error('Add a title'); return }
     if (startTime >= endTime) { toast.error('End time must be after start time'); return }
     setSaving(true)
-    const payload = { title: title.trim(), start_time: startTime, end_time: endTime, color, focus_type: focusType, notes: notes || null }
+    const payload = {
+      title: title.trim(),
+      start_time: startTime,
+      end_time: endTime,
+      color,
+      focus_type: focusType,
+      notes: notes || null,
+      task_ids: taskSet.task_ids,
+      task_names: taskSet.task_names,
+    }
     if (editing) {
       await updateBlock(initial.id, payload)
       toast.success('Block updated')
@@ -58,7 +73,7 @@ export default function BlockForm({ user, initial, onClose }) {
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 space-y-4">
+        <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
           <div>
             <label className={label} style={{ color: 'var(--ink-3)' }}>Title</label>
             <input
@@ -99,6 +114,8 @@ export default function BlockForm({ user, initial, onClose }) {
               ))}
             </div>
           </div>
+
+          <BlockTasks userId={user.id} value={taskSet} onChange={setTaskSet} />
 
           <div>
             <label className={label} style={{ color: 'var(--ink-3)' }}>Focus type</label>

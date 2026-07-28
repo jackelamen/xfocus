@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import { usePulseTasks } from '../../hooks/usePulseTasks.js'
 import { dueBucket, dueLabel } from '../../lib/utils.js'
+import { pulseTaskUrl } from '../../lib/pulse.js'
 
 // Filter chips → the due buckets each one matches.
 const DUE_FILTERS = [
@@ -22,34 +23,57 @@ function DraggableTask({ task }) {
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing select-none transition-all"
+      className="group flex items-center gap-2 px-3 py-2.5 rounded-xl select-none transition-all"
       style={{
         background: isDragging ? 'rgba(255,155,115,0.12)' : 'var(--surface)',
         boxShadow: 'var(--shadow-sm)',
         opacity: isDragging ? 0.5 : 1,
       }}
     >
-      <span className="material-symbols-rounded" style={{ fontSize: 14, color: 'var(--ink-4)' }}>drag_indicator</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>{task.title}</p>
-        {task.due_date ? (
-          <p className="text-[10px] mt-0.5" style={{ color: dueBucket(task.due_date) === 'overdue' ? 'var(--coral-deep)' : 'var(--ink-3)' }}>
-            {dueLabel(task.due_date)}
-          </p>
-        ) : (
-          <p className="text-[10px] mt-0.5" style={{ color: 'var(--ink-4)' }}>No due date</p>
-        )}
+      {/* Only the body is a drag handle, so the Pulse link stays clickable. */}
+      <div {...listeners} {...attributes} className="flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing">
+        <span className="material-symbols-rounded" style={{ fontSize: 14, color: 'var(--ink-4)' }}>drag_indicator</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>{task.title}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+            {task.list_name && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 truncate" style={{
+                background: (task.list_color || '#9b8fe0') + '22',
+                color: task.list_color || 'var(--lav-deep)',
+                maxWidth: 90,
+              }}>
+                {task.list_name}
+              </span>
+            )}
+            {task.due_date ? (
+              <span className="text-[10px]" style={{ color: dueBucket(task.due_date) === 'overdue' ? 'var(--coral-deep)' : 'var(--ink-3)' }}>
+                {dueLabel(task.due_date)}
+              </span>
+            ) : (
+              <span className="text-[10px]" style={{ color: 'var(--ink-4)' }}>No due date</span>
+            )}
+          </div>
+        </div>
       </div>
       {task.priority && task.priority !== 'none' && (
-        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded" style={{
+        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded flex-shrink-0" style={{
           background: isUrgent ? 'rgba(255,155,115,0.16)' : 'rgba(155,143,224,0.14)',
           color: isUrgent ? 'var(--coral-deep)' : 'var(--lav-deep)',
         }}>
           {task.priority[0].toUpperCase()}
         </span>
       )}
+      <a
+        href={pulseTaskUrl(task)}
+        target="_blank"
+        rel="noreferrer"
+        onPointerDown={e => e.stopPropagation()}
+        className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ color: 'var(--lav-deep)' }}
+        title="Open in Pulse"
+      >
+        <span className="material-symbols-rounded" style={{ fontSize: 13 }}>open_in_new</span>
+      </a>
     </div>
   )
 }
