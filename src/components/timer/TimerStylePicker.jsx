@@ -1,5 +1,5 @@
 import React from 'react'
-import { TIMER_STYLES } from './TimerFace.jsx'
+import { TIMER_STYLES } from '../../lib/timerStyles.js'
 
 /* Compact, scrollable style switcher shared by inline + focus mode. */
 export default function TimerStylePicker({ value, onChange, theme = 'light' }) {

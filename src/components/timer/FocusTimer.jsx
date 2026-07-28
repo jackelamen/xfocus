@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useTimerStore } from '../../store/timerStore.js'
 import { formatTime } from '../../lib/utils.js'
 import TaskSelector from './TaskSelector.jsx'
-import TimerFace, { TIMER_STYLES, STYLE_STORAGE_KEY } from './TimerFace.jsx'
+import TimerFace from './TimerFace.jsx'
+import { TIMER_STYLES, STYLE_STORAGE_KEY } from '../../lib/timerStyles.js'
 import TimerStyleGrid from './TimerStyleGrid.jsx'
 
 const MODES = [

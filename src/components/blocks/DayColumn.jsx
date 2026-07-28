@@ -1,21 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { timeToMinutes, minutesToTime, todayStr } from '../../lib/utils.js'
+import { layoutBlocks } from '../../lib/overlap.js'
+import { HOUR_START, HOUR_END, TOTAL_MINS, SNAP_MIN, MIN_BLOCK_MIN, HOURS } from '../../lib/timeline.js'
 import TaskChip from './TaskChip.jsx'
 
-// Timeline geometry — shared by the day and week views.
-export const HOUR_START = 6
-export const HOUR_END = 23
-export const TOTAL_MINS = (HOUR_END - HOUR_START) * 60
-export const SNAP_MIN = 5          // snap resize to 5-minute steps
-export const MIN_BLOCK_MIN = 15    // a block can't be shorter than 15 minutes
-export const HOURS = Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i)
-
-export function hourLabel(h) {
-  return h === 12 ? '12p' : h > 12 ? `${h - 12}p` : `${h}a`
-}
-
-function TimeBlock({ block, pxPerMin, taskMap, dense, onEdit, onFocusNow, onResize, onRemoveTask }) {
+function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, onResize, onRemoveTask }) {
   const { setNodeRef, isOver } = useDroppable({ id: `block-${block.id}` })
 
   // Live draft while resizing (null when not resizing)
@@ -27,6 +17,14 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, onEdit, onFocusNow, onResi
   const top = (startMin - HOUR_START * 60) * pxPerMin
   const height = Math.max(28, (endMin - startMin) * pxPerMin)
   const resizing = !!draft
+
+  // Clashing blocks share the column: each takes 1/lanes of the width. A small
+  // stagger keeps the underlying block's edge visible.
+  const lanes = lane?.lanes || 1
+  const laneIdx = lane?.lane || 0
+  const clashing = lanes > 1
+  const widthPct = 100 / lanes
+  const gutter = dense ? 1 : 8
 
   const ids = block.task_ids || []
   const names = block.task_names || []
@@ -83,12 +81,14 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, onEdit, onFocusNow, onResi
   return (
     <div
       ref={setNodeRef}
-      className="absolute left-0 rounded-xl overflow-hidden group"
+      className="absolute rounded-xl overflow-hidden group"
       style={{
-        top, height, right: dense ? 1 : 8,
+        top, height,
+        left: `calc(${laneIdx * widthPct}% + ${laneIdx ? 4 : 0}px)`,
+        width: `calc(${widthPct}% - ${gutter}px)`,
         background: block.color + (isOver ? '33' : '20'),
         border: `1.5px solid ${block.color}${resizing || isOver ? '99' : '55'}`,
-        zIndex: resizing ? 15 : 5,
+        zIndex: resizing ? 15 : 5 + laneIdx,
         boxShadow: resizing ? '0 6px 18px rgba(91,110,160,0.22)' : 'none',
       }}
     >
@@ -104,8 +104,17 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, onEdit, onFocusNow, onResi
 
       <div className={`${dense ? 'pl-1.5 pr-1' : 'pl-3 pr-2'} py-1 h-full flex flex-col`}>
         <div className="flex items-start justify-between gap-1 flex-shrink-0">
-          <p className="font-bold leading-tight truncate flex-1 min-w-0" style={{ color: block.color, fontSize: height < 36 || dense ? 9 : 11 }}>
-            {block.title}
+          <p className="font-bold leading-tight truncate flex-1 min-w-0 flex items-center gap-0.5" style={{ color: block.color, fontSize: height < 36 || dense ? 9 : 11 }}>
+            {clashing && (
+              <span
+                className="material-symbols-rounded flex-shrink-0"
+                style={{ fontSize: dense ? 10 : 12, color: 'var(--coral-deep)' }}
+                title="This block overlaps another"
+              >
+                warning
+              </span>
+            )}
+            <span className="truncate">{block.title}</span>
           </p>
           {!resizing && (
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
@@ -207,6 +216,9 @@ function NowLine({ pxPerMin }) {
  * Used once in the day view and seven times side by side in the week view.
  */
 export default function DayColumn({ date, blocks, pxPerMin, dense = false, taskMap, handlers }) {
+  // Overlapping blocks are laid out side by side rather than stacked.
+  const lanes = useMemo(() => layoutBlocks(blocks), [blocks])
+
   return (
     <div
       className="flex-1 relative min-w-0"
@@ -223,6 +235,7 @@ export default function DayColumn({ date, blocks, pxPerMin, dense = false, taskM
           block={b}
           pxPerMin={pxPerMin}
           dense={dense}
+          lane={lanes.get(b.id)}
           taskMap={taskMap}
           onEdit={handlers.onEdit}
           onFocusNow={handlers.onFocusNow}

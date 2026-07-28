@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useBlocksStore } from '../../store/blocksStore.js'
-import { FOCUS_TYPES, BLOCK_COLORS } from '../../lib/utils.js'
+import { FOCUS_TYPES, BLOCK_COLORS, timeToMinutes } from '../../lib/utils.js'
+import { findConflicts, nextFreeSlot } from '../../lib/overlap.js'
+import { HOUR_START, HOUR_END } from '../../lib/timeline.js'
 import BlockTasks from './BlockTasks.jsx'
 import toast from 'react-hot-toast'
 
@@ -8,8 +10,11 @@ export default function BlockForm({ user, initial, onClose }) {
   const createBlock = useBlocksStore(s => s.createBlock)
   const updateBlock = useBlocksStore(s => s.updateBlock)
   const deleteBlock = useBlocksStore(s => s.deleteBlock)
+  const allBlocks = useBlocksStore(s => s.blocks)
+  const viewDate = useBlocksStore(s => s.viewDate)
 
   const editing = !!initial?.id
+  const blockDate = initial?.date || viewDate
 
   const [title, setTitle] = useState(initial?.title || '')
   const [startTime, setStartTime] = useState(initial?.start_time?.slice(0, 5) || '09:00')
@@ -24,9 +29,37 @@ export default function BlockForm({ user, initial, onClose }) {
     task_names: initial?.task_names || [],
   })
 
+  // Blocks on the same day that this one would clash with. Overlap is allowed
+  // (a call inside a longer work window is legitimate) so this warns rather
+  // than blocks, and offers to move to the next opening.
+  const conflicts = useMemo(() => {
+    if (startTime >= endTime) return []
+    const sameDay = allBlocks.filter(b => b.date === blockDate)
+    return findConflicts(
+      sameDay,
+      { start: timeToMinutes(startTime), end: timeToMinutes(endTime) },
+      initial?.id || null
+    )
+  }, [allBlocks, blockDate, startTime, endTime, initial?.id])
+
+  function moveToNextFree() {
+    const durationMin = timeToMinutes(endTime) - timeToMinutes(startTime)
+    const sameDay = allBlocks.filter(b => b.date === blockDate)
+    const slot = nextFreeSlot(
+      sameDay, durationMin, timeToMinutes(startTime), HOUR_END * 60, initial?.id || null
+    )
+    if (!slot) { toast.error('No free slot left today for that length'); return }
+    setStartTime(slot.start_time)
+    setEndTime(slot.end_time)
+    toast.success(`Moved to ${slot.start_time}`)
+  }
+
   async function handleSave() {
     if (!title.trim()) { toast.error('Add a title'); return }
     if (startTime >= endTime) { toast.error('End time must be after start time'); return }
+    if (timeToMinutes(startTime) < HOUR_START * 60 || timeToMinutes(endTime) > HOUR_END * 60) {
+      toast('Outside the visible timeline — it will save, but you won\'t see it')
+    }
     setSaving(true)
     const payload = {
       title: title.trim(),
@@ -100,6 +133,37 @@ export default function BlockForm({ user, initial, onClose }) {
                 className="w-full rounded-xl px-4 py-2.5 text-sm font-medium outline-none" style={field} />
             </div>
           </div>
+
+          {conflicts.length > 0 && (
+            <div className="rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,155,115,0.12)', border: '1px solid rgba(244,122,77,0.35)' }}>
+              <div className="flex items-start gap-2">
+                <span className="material-symbols-rounded flex-shrink-0" style={{ fontSize: 15, color: 'var(--coral-deep)' }}>warning</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-bold" style={{ color: 'var(--coral-deep)' }}>
+                    Overlaps {conflicts.length} existing block{conflicts.length === 1 ? '' : 's'}
+                  </p>
+                  <ul className="mt-1 space-y-0.5">
+                    {conflicts.slice(0, 3).map(c => (
+                      <li key={c.id} className="text-[10px] truncate" style={{ color: 'var(--ink-2)' }}>
+                        {String(c.start_time).slice(0, 5)}–{String(c.end_time).slice(0, 5)} · {c.title}
+                      </li>
+                    ))}
+                    {conflicts.length > 3 && (
+                      <li className="text-[10px]" style={{ color: 'var(--ink-3)' }}>+{conflicts.length - 3} more</li>
+                    )}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={moveToNextFree}
+                    className="mt-1.5 text-[10px] font-extrabold uppercase tracking-wider"
+                    style={{ color: 'var(--lav-deep)' }}
+                  >
+                    Move to next free time
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className={label} style={{ color: 'var(--ink-3)' }}>Color</label>

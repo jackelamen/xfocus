@@ -8,10 +8,13 @@ import { useTasksByIds } from '../hooks/usePulseTasks.js'
 import PulseTaskPanel from '../components/blocks/PulseTaskPanel.jsx'
 import BlockForm from '../components/blocks/BlockForm.jsx'
 import DayPlanner from '../components/blocks/DayPlanner.jsx'
-import DayColumn, { HOURS, TOTAL_MINS, hourLabel } from '../components/blocks/DayColumn.jsx'
+import DayColumn from '../components/blocks/DayColumn.jsx'
+import { HOURS, TOTAL_MINS, hourLabel } from '../lib/timeline.js'
 import {
   todayStr, tomorrowStr, addDaysStr, weekStartStr, weekdayShort, monthDayShort, parseDateStr,
+  timeToMinutes,
 } from '../lib/utils.js'
+import { findConflicts, blockRange, overlaps } from '../lib/overlap.js'
 
 const PX_PER_MIN_DAY = 1.4
 const PX_PER_MIN_WEEK = 0.9
@@ -53,6 +56,18 @@ export default function BlocksPage({ user }) {
     for (const b of blocks) if (m.has(b.date)) m.get(b.date).push(b)
     return m
   }, [blocks, dates])
+
+  // How many blocks in view sit on top of another one.
+  const clashCount = useMemo(() => {
+    let n = 0
+    for (const [, dayBlocks] of byDate) {
+      for (let i = 0; i < dayBlocks.length; i++) {
+        const r = blockRange(dayBlocks[i])
+        if (dayBlocks.some((o, j) => j !== i && overlaps(r, blockRange(o)))) n++
+      }
+    }
+    return n
+  }, [byDate])
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -98,7 +113,13 @@ export default function BlocksPage({ user }) {
         task_names: [task.title],
         focus_type: 'Other',
       })
-      if (error) toast.error('Could not create block')
+      if (error) { toast.error('Could not create block'); return }
+      // Dropping onto an hour that's already busy is allowed, but say so.
+      const clashes = findConflicts(
+        blocks.filter(b => b.date === date),
+        { start: hour * 60, end: (hour + 1) * 60 }
+      )
+      if (clashes.length) toast(`Blocked ${String(hour).padStart(2, '0')}:00 — overlaps “${clashes[0].title}”`, { icon: '⚠️' })
       else toast.success(`Blocked ${String(hour).padStart(2, '0')}:00 for “${task.title}”`)
     }
   }
@@ -106,7 +127,18 @@ export default function BlocksPage({ user }) {
   const handlers = {
     onEdit: block => { setFormBlock(block); setFormOpen(true) },
     onFocusNow: handleFocusNow,
-    onResize: (blk, start_time, end_time) => updateBlock(blk.id, { start_time, end_time }),
+    onResize: async (blk, start_time, end_time) => {
+      const { error } = await updateBlock(blk.id, { start_time, end_time })
+      if (error) { toast.error('Could not resize block'); return }
+      const clashes = findConflicts(
+        blocks.filter(b => b.date === blk.date),
+        { start: timeToMinutes(start_time), end: timeToMinutes(end_time) },
+        blk.id
+      )
+      if (clashes.length) {
+        toast(`Now overlaps “${clashes[0].title}”${clashes.length > 1 ? ` +${clashes.length - 1}` : ''}`, { icon: '⚠️' })
+      }
+    },
     onRemoveTask: handleRemoveTask,
   }
 
@@ -129,7 +161,19 @@ export default function BlocksPage({ user }) {
           <div className="min-w-0 flex items-center gap-2">
             <div className="min-w-0">
               <h2 className="font-extrabold" style={{ fontFamily: 'Manrope, sans-serif', fontSize: 18, color: 'var(--ink)' }}>Time Blocks</h2>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--ink-3)' }}>{rangeLabel}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <p className="text-xs" style={{ color: 'var(--ink-3)' }}>{rangeLabel}</p>
+                {clashCount > 0 && (
+                  <span
+                    className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: 'rgba(255,155,115,0.14)', color: 'var(--coral-deep)' }}
+                    title="Blocks are scheduled on top of each other"
+                  >
+                    <span className="material-symbols-rounded" style={{ fontSize: 11 }}>warning</span>
+                    {clashCount} overlapping
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-0.5 ml-1">
               <NavBtn icon="chevron_left" onClick={() => shift(-1)} title={week ? 'Previous week' : 'Previous day'} />

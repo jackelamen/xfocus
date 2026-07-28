@@ -1,5 +1,5 @@
 import React from 'react'
-import { TIMER_STYLES } from './TimerFace.jsx'
+import { TIMER_STYLES } from '../../lib/timerStyles.js'
 
 /* Wrapped grid of timer styles — every option visible at once, no scrolling.
    Used inside the timer-settings popover (inline + focus mode). */

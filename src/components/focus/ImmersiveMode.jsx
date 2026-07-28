@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useTimerStore } from '../../store/timerStore.js'
 import { useFocusStore } from '../../store/focusStore.js'
 import { formatTime, startAmbient } from '../../lib/utils.js'
-import TimerFace, { TIMER_STYLES, STYLE_STORAGE_KEY } from '../timer/TimerFace.jsx'
+import TimerFace from '../timer/TimerFace.jsx'
+import { TIMER_STYLES, STYLE_STORAGE_KEY } from '../../lib/timerStyles.js'
 import TimerStyleGrid from '../timer/TimerStyleGrid.jsx'
 
 const SOUNDS = [
