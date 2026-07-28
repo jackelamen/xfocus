@@ -10,6 +10,7 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, 
 
   // Live draft while resizing (null when not resizing)
   const [draft, setDraft] = useState(null)
+  const [hovered, setHovered] = useState(false)
   const resizeRef = useRef(null)
 
   const startMin = draft ? draft.start : timeToMinutes(block.start_time)
@@ -28,10 +29,25 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, 
 
   const ids = block.task_ids || []
   const names = block.task_names || []
-  // Header (title + time) eats ~34px; each chip needs ~19px.
-  const chipRoom = Math.max(0, Math.floor((height - (dense ? 22 : 34)) / (dense ? 17 : 19)))
+
+  // How many chips actually fit. Short blocks tighten their own padding and
+  // type so a 30-minute block can still show its one task, and the time footer
+  // (which only renders on taller blocks) is only subtracted when it exists.
+  const tight = dense || height < 60
+  const padY = tight ? 4 : 8          // py-0.5 vs py-1, both edges
+  const titleH = tight ? 12 : 14
+  const footerH = height > 55 ? (dense ? 10 : 12) : 0
+  const chipH = tight ? 16 : 18
+  const room = height - 3 /* borders */ - padY - titleH - footerH - 2 /* chip stack margin */
+  const chipRoom = Math.max(0, Math.floor(room / chipH))
   const visibleChips = resizing ? 0 : Math.min(ids.length, chipRoom)
   const hiddenChips = ids.length - visibleChips
+  // Anything that can't be drawn still gets counted in the title row, so a
+  // block never looks empty when it has work attached to it.
+  const showCountBadge = !resizing && hiddenChips > 0 && visibleChips === 0
+  const taskTooltip = ids
+    .map((id, i) => taskMap.get(id)?.title || names[i] || 'Untitled task')
+    .join('\n')
 
   function beginResize(edge, e) {
     e.preventDefault()
@@ -81,17 +97,26 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, 
   return (
     <div
       ref={setNodeRef}
-      className="absolute rounded-xl overflow-hidden group"
+      className="absolute group"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         top, height,
         left: `calc(${laneIdx * widthPct}% + ${laneIdx ? 4 : 0}px)`,
         width: `calc(${widthPct}% - ${gutter}px)`,
-        background: block.color + (isOver ? '33' : '20'),
-        border: `1.5px solid ${block.color}${resizing || isOver ? '99' : '55'}`,
-        zIndex: resizing ? 15 : 5 + laneIdx,
-        boxShadow: resizing ? '0 6px 18px rgba(91,110,160,0.22)' : 'none',
+        // Hovering lifts the block so its overflow panel isn't buried under
+        // whatever is scheduled after it.
+        zIndex: resizing ? 15 : hovered ? 30 : 5 + laneIdx,
       }}
     >
+      <div
+        className="relative w-full h-full rounded-xl overflow-hidden"
+        style={{
+          background: block.color + (isOver ? '33' : '20'),
+          border: `1.5px solid ${block.color}${resizing || isOver ? '99' : '55'}`,
+          boxShadow: resizing ? '0 6px 18px rgba(91,110,160,0.22)' : 'none',
+        }}
+      >
       <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ background: block.color }} />
 
       {/* Resize handles (top + bottom). Visible on hover/resize. */}
@@ -102,9 +127,9 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, 
         <div className="mx-auto mt-[3px] rounded-full" style={{ width: 26, height: 3, background: block.color, opacity: 0.7 }} />
       </div>
 
-      <div className={`${dense ? 'pl-1.5 pr-1' : 'pl-3 pr-2'} py-1 h-full flex flex-col`}>
+      <div className={`${dense ? 'pl-1.5 pr-1' : 'pl-3 pr-2'} ${tight ? 'py-0.5' : 'py-1'} h-full flex flex-col`}>
         <div className="flex items-start justify-between gap-1 flex-shrink-0">
-          <p className="font-bold leading-tight truncate flex-1 min-w-0 flex items-center gap-0.5" style={{ color: block.color, fontSize: height < 36 || dense ? 9 : 11 }}>
+          <p className="font-bold leading-tight truncate flex-1 min-w-0 flex items-center gap-0.5" style={{ color: block.color, fontSize: tight ? 9 : 11 }}>
             {clashing && (
               <span
                 className="material-symbols-rounded flex-shrink-0"
@@ -115,6 +140,18 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, 
               </span>
             )}
             <span className="truncate">{block.title}</span>
+            {/* Too short to draw chips — carry the task count instead, and put
+                the names in the tooltip so they're still reachable. */}
+            {showCountBadge && (
+              <span
+                className="flex items-center gap-0.5 flex-shrink-0 rounded px-1 group-hover:opacity-0 transition-opacity"
+                style={{ background: 'rgba(255,255,255,0.6)', color: 'var(--ink-2)', fontSize: dense ? 8 : 9 }}
+                title={taskTooltip}
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: dense ? 8 : 10 }}>task_alt</span>
+                {ids.length}
+              </span>
+            )}
           </p>
           {!resizing && (
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
@@ -146,7 +183,7 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, 
                 key={`${id}-${i}`}
                 task={taskMap.get(id)}
                 fallbackName={names[i]}
-                compact={dense}
+                compact={tight}
                 onRemove={() => onRemoveTask(block, id)}
               />
             ))}
@@ -167,6 +204,32 @@ function TimeBlock({ block, pxPerMin, taskMap, dense, lane, onEdit, onFocusNow, 
           </div>
         )}
       </div>
+      </div>
+
+      {/* Overflow panel: a short block can't draw its tasks, so hovering spills
+          the rest out below it. Sits outside the clipped card, and the wrapper
+          raises its z-index while hovered so it lands on top. */}
+      {hovered && !resizing && hiddenChips > 0 && (
+        <div
+          className="absolute left-0 right-0 rounded-xl p-1 space-y-px"
+          style={{
+            top: '100%', marginTop: 2,
+            background: 'var(--surface)',
+            border: `1.5px solid ${block.color}55`,
+            boxShadow: '0 10px 24px rgba(70,90,140,0.18)',
+          }}
+        >
+          {ids.slice(visibleChips).map((id, i) => (
+            <TaskChip
+              key={`${id}-${visibleChips + i}`}
+              task={taskMap.get(id)}
+              fallbackName={names[visibleChips + i]}
+              compact={dense}
+              onRemove={() => onRemoveTask(block, id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
