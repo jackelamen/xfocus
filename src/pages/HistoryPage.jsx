@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { normalizeSession } from '../store/focusStore.js'
 import { formatMinutes } from '../lib/utils.js'
+import EditSessionModal from '../components/session/EditSessionModal.jsx'
 import { format, parseISO, startOfWeek, subDays } from 'date-fns'
 import {
   totalXp, levelFromXp, lifetimeStats, bestFocusWindow, flowTrend, longestStreak,
@@ -37,6 +38,16 @@ export default function HistoryPage({ user }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [sessionsByDate, setSessionsByDate] = useState({})
+  const [editingSession, setEditingSession] = useState(null)
+
+  function rebuildByDate(list) {
+    const byDate = {}
+    list.forEach(s => {
+      if (!byDate[s.date]) byDate[s.date] = []
+      byDate[s.date].push(s)
+    })
+    return byDate
+  }
 
   useEffect(() => {
     async function load() {
@@ -44,20 +55,32 @@ export default function HistoryPage({ user }) {
         .from('focus_sessions')
         .select('*')
         .eq('user_id', user.id)
+        .is('deleted_at', null)
         .order('date', { ascending: false })
         .limit(200)
       const all = (data || []).map(normalizeSession)
       setSessions(all)
-      const byDate = {}
-      all.forEach(s => {
-        if (!byDate[s.date]) byDate[s.date] = []
-        byDate[s.date].push(s)
-      })
-      setSessionsByDate(byDate)
+      setSessionsByDate(rebuildByDate(all))
       setLoading(false)
     }
     load()
   }, [user.id])
+
+  function handleSessionSaved(updated) {
+    setSessions(prev => {
+      const next = prev.map(s => (s.id === updated.id ? updated : s))
+      setSessionsByDate(rebuildByDate(next))
+      return next
+    })
+  }
+
+  function handleSessionDeleted(id) {
+    setSessions(prev => {
+      const next = prev.filter(s => s.id !== id)
+      setSessionsByDate(rebuildByDate(next))
+      return next
+    })
+  }
 
   const today = new Date()
   const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd')
@@ -204,7 +227,7 @@ export default function HistoryPage({ user }) {
             ) : (
               <div className="space-y-2">
                 {sessions.map(s => (
-                  <div key={s.id} className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div key={s.id} className="group rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: 'var(--surface)', boxShadow: 'var(--shadow-sm)' }}>
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--canvas)' }}>
                       <FeltEmoji score={s.felt_score} />
                     </div>
@@ -216,13 +239,21 @@ export default function HistoryPage({ user }) {
                         {s.date} · {s.duration_mins}m{s.focus_type && ` · ${s.focus_type}`}
                       </p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right flex-shrink-0 flex items-center gap-2">
                       {s.completed && (
                         <span className="material-symbols-rounded block" style={{ fontSize: 16, color: 'var(--sky-deep)' }}>check_circle</span>
                       )}
                       {s.got_distracted && (
                         <span className="material-symbols-rounded block" style={{ fontSize: 14, color: 'var(--lav-deep)' }}>bolt</span>
                       )}
+                      <button
+                        onClick={() => setEditingSession(s)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                        style={{ color: 'var(--ink-3)' }}
+                        aria-label="Edit session"
+                      >
+                        <span className="material-symbols-rounded" style={{ fontSize: 16 }}>edit</span>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -231,6 +262,15 @@ export default function HistoryPage({ user }) {
           </div>
         </div>
       </div>
+
+      {editingSession && (
+        <EditSessionModal
+          session={editingSession}
+          onClose={() => setEditingSession(null)}
+          onSaved={handleSessionSaved}
+          onDeleted={handleSessionDeleted}
+        />
+      )}
     </div>
   )
 }

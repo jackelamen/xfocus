@@ -61,6 +61,7 @@ export const useFocusStore = create((set, get) => ({
       .select('*')
       .eq('user_id', userId)
       .eq('date', today)
+      .is('deleted_at', null)
       .order('started_at', { ascending: true })
     set({ sessions: (sessions || []).map(normalizeSession) })
 
@@ -69,6 +70,7 @@ export const useFocusStore = create((set, get) => ({
       .from('focus_sessions')
       .select('*')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .order('date', { ascending: true })
     const all = (allSessions || []).map(normalizeSession)
     const completed = all.filter(s => s.completed)
@@ -131,6 +133,55 @@ export const useFocusStore = create((set, get) => ({
         streakUp: streak > prevStreak,
       },
     }
+  },
+
+  // Corrects a session after the fact — e.g. the timer was left running by
+  // mistake and actual_minutes is way too long. `updates` is in xFocus shape
+  // (duration_mins, notes, etc.) and gets denormalized for the shared table.
+  async updateSession(sessionId, updates) {
+    const payload = denormalizeForWrite(updates)
+    const { data: raw, error } = await supabase
+      .from('focus_sessions')
+      .update(payload)
+      .eq('id', sessionId)
+      .select()
+      .single()
+    if (error || !raw) return { data: null, error }
+    const data = normalizeSession(raw)
+
+    set(state => {
+      const patch = (arr) => arr.map(s => (s.id === sessionId ? data : s))
+      const allSessions = patch(state.allSessions)
+      const sessions = patch(state.sessions)
+      const dates = [...new Set(allSessions.filter(s => s.completed).map(s => s.date))]
+      const streak = computeStreak(dates)
+      const xp = totalXp(allSessions)
+      return { allSessions, sessions, allSessionDates: dates, streak, xp }
+    })
+
+    return { data, error: null }
+  },
+
+  // Soft-delete: useful if a runaway/duplicate session should be removed
+  // entirely rather than just have its duration corrected.
+  async deleteSession(sessionId) {
+    const { error } = await supabase
+      .from('focus_sessions')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', sessionId)
+    if (error) return { error }
+
+    set(state => {
+      const drop = (arr) => arr.filter(s => s.id !== sessionId)
+      const allSessions = drop(state.allSessions)
+      const sessions = drop(state.sessions)
+      const dates = [...new Set(allSessions.filter(s => s.completed).map(s => s.date))]
+      const streak = computeStreak(dates)
+      const xp = totalXp(allSessions)
+      return { allSessions, sessions, allSessionDates: dates, streak, xp }
+    })
+
+    return { error: null }
   },
 
   async logDistraction(userId, label, sessionId = null) {

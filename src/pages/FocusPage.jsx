@@ -7,6 +7,7 @@ import MomentumCard from '../components/focus/MomentumCard.jsx'
 import CelebrationOverlay from '../components/focus/CelebrationOverlay.jsx'
 import ImmersiveMode from '../components/focus/ImmersiveMode.jsx'
 import DistractionLog from '../components/secondary/DistractionLog.jsx'
+import EditSessionModal from '../components/session/EditSessionModal.jsx'
 import { useFocusStore } from '../store/focusStore.js'
 import { useTimerStore } from '../store/timerStore.js'
 import { formatMinutes } from '../lib/utils.js'
@@ -30,6 +31,7 @@ export default function FocusPage({ user }) {
   const [sessionMeta, setSessionMeta] = useState(null)
   const [reward, setReward] = useState(null)
   const [immersive, setImmersive] = useState(false)
+  const [editingSession, setEditingSession] = useState(null)
   const sessions = useFocusStore(s => s.sessions)
   const streak = useFocusStore(s => s.streak)
   const { activeBlockTitle, activeTaskNames } = useTimerStore()
@@ -125,6 +127,14 @@ export default function FocusPage({ user }) {
             {s.completed && (
               <span className="material-symbols-rounded" style={{ fontSize: 17, color: 'var(--sky-deep)' }}>check_circle</span>
             )}
+            <button
+              onClick={() => setEditingSession(s)}
+              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity"
+              style={{ color: 'var(--ink-3)' }}
+              aria-label="Edit session"
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: 15 }}>edit</span>
+            </button>
           </div>
         ))}
       </div>
@@ -186,6 +196,12 @@ export default function FocusPage({ user }) {
       )}
       {reward && (
         <CelebrationOverlay reward={reward} onDone={() => setReward(null)} />
+      )}
+      {editingSession && (
+        <EditSessionModal
+          session={editingSession}
+          onClose={() => setEditingSession(null)}
+        />
       )}
     </div>
   )
