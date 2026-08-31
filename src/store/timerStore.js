@@ -23,6 +23,7 @@ export const useTimerStore = create((set, get) => ({
   activeBlockId: null,
   activeBlockTitle: null,
   activeTaskNames: [],
+  activeTaskIds: [],
   selectedTaskId: null,
   selectedTaskName: null,
 
@@ -61,6 +62,10 @@ export const useTimerStore = create((set, get) => ({
       activeBlockId: block?.id || null,
       activeBlockTitle: block?.title || null,
       activeTaskNames: block?.task_names || [],
+      // Blocks already carry task_ids (see DayPlanner/BlockTasks) — without
+      // this, a block session's task_ids always saved empty, so xCompass had
+      // no id to trace back to xPM even after a task got linked to a project.
+      activeTaskIds: block?.task_ids || [],
     })
   },
   setSelectedTask(task) {

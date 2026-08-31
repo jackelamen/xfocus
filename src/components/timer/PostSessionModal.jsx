@@ -10,35 +10,40 @@ const STARS = [1, 2, 3, 4, 5]
 
 export default function PostSessionModal({ user, sessionMeta, onClose }) {
   const saveSession = useFocusStore(s => s.saveSession)
-  const { activeBlockId, activeBlockTitle, activeTaskNames, selectedTaskId, selectedTaskName } = useTimerStore()
+  const { activeBlockId, activeBlockTitle, activeTaskNames, activeTaskIds, selectedTaskId, selectedTaskName } = useTimerStore()
   const { spaces } = useSpaces(user?.id)
 
   // Task names = the picked Pulse task (if any) plus any block tasks.
   const taskNames = [selectedTaskName, ...activeTaskNames].filter(Boolean)
-  const taskIds = selectedTaskId ? [selectedTaskId] : []
+  // Task ids = the picked Pulse task (if any) plus the block's own tasks —
+  // both feed resolveSpaceForTasks below and get saved onto the session, so
+  // a block session can be traced back to xPM the same as a single-task one.
+  const taskIds = [...new Set([selectedTaskId, ...activeTaskIds].filter(Boolean))]
+  const taskIdsKey = taskIds.join(',')
 
   const [feltScore, setFeltScore] = useState(0)
   const [spaceId, setSpaceId] = useState(getLastSpaceId)
   const [spaceSuggested, setSpaceSuggested] = useState(false)
   const spaceTouched = useRef(false) // true once the user picks a company manually
 
-  // If the selected task is linked to an xPM project (via the same bridge
-  // xPM/Pulse use to sync completion), suggest that company automatically —
-  // more reliable than guessing from the task's free-text tags. Never
+  // If any task in this session is linked to an xPM project (via the same
+  // bridge xPM/Pulse use to sync completion), suggest that company
+  // automatically — more reliable than guessing from free-text tags. Never
   // overwrites a company the user already picked by hand.
   useEffect(() => {
-    if (selectedTaskId == null) return
+    if (taskIds.length === 0) return
     let cancelled = false
-    resolveSpaceForTasks([selectedTaskId]).then((map) => {
+    resolveSpaceForTasks(taskIds).then((map) => {
       if (cancelled || spaceTouched.current) return
-      const resolved = map.get(String(selectedTaskId))
+      const resolved = taskIds.map((id) => map.get(String(id))).find(Boolean)
       if (resolved) {
         setSpaceId(resolved)
         setSpaceSuggested(true)
       }
     })
     return () => { cancelled = true }
-  }, [selectedTaskId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskIdsKey])
   const [gotDistracted, setGotDistracted] = useState(null)
   const [distractionCount, setDistractionCount] = useState(0)
   const [taskCompleted, setTaskCompleted] = useState(null)
