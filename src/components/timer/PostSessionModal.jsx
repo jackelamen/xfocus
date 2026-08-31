@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useFocusStore } from '../../store/focusStore.js'
 import { useTimerStore } from '../../store/timerStore.js'
 import { useSpaces, getLastSpaceId, setLastSpaceId } from '../../hooks/useSpaces.js'
+import { resolveSpaceForTasks } from '../../lib/spaceLinks.js'
 import { todayStr, FOCUS_TYPES } from '../../lib/utils.js'
 import toast from 'react-hot-toast'
 
@@ -18,6 +19,26 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
 
   const [feltScore, setFeltScore] = useState(0)
   const [spaceId, setSpaceId] = useState(getLastSpaceId)
+  const [spaceSuggested, setSpaceSuggested] = useState(false)
+  const spaceTouched = useRef(false) // true once the user picks a company manually
+
+  // If the selected task is linked to an xPM project (via the same bridge
+  // xPM/Pulse use to sync completion), suggest that company automatically —
+  // more reliable than guessing from the task's free-text tags. Never
+  // overwrites a company the user already picked by hand.
+  useEffect(() => {
+    if (selectedTaskId == null) return
+    let cancelled = false
+    resolveSpaceForTasks([selectedTaskId]).then((map) => {
+      if (cancelled || spaceTouched.current) return
+      const resolved = map.get(String(selectedTaskId))
+      if (resolved) {
+        setSpaceId(resolved)
+        setSpaceSuggested(true)
+      }
+    })
+    return () => { cancelled = true }
+  }, [selectedTaskId])
   const [gotDistracted, setGotDistracted] = useState(null)
   const [distractionCount, setDistractionCount] = useState(0)
   const [taskCompleted, setTaskCompleted] = useState(null)
@@ -212,12 +233,21 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
           {/* Company / space — used by xCompass to attribute this time */}
           {spaces.length > 0 && (
             <div>
-              <label className="block text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--ink-3)' }}>
+              <label className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--ink-3)' }}>
                 Company
+                {spaceSuggested && (
+                  <span className="normal-case font-semibold tracking-normal" style={{ color: 'var(--coral-deep)' }}>
+                    · from linked task
+                  </span>
+                )}
               </label>
               <select
                 value={spaceId}
-                onChange={e => setSpaceId(e.target.value)}
+                onChange={e => {
+                  spaceTouched.current = true
+                  setSpaceSuggested(false)
+                  setSpaceId(e.target.value)
+                }}
                 className="w-full rounded-xl px-4 py-2.5 text-sm font-medium"
                 style={{ background: 'var(--canvas)', color: 'var(--ink)', border: '1px solid var(--line-2)' }}
               >
