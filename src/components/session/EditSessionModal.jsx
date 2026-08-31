@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
 import { useFocusStore } from '../../store/focusStore.js'
+import { useSpaces } from '../../hooks/useSpaces.js'
 import { formatMinutes } from '../../lib/utils.js'
 
-// Lets you fix a session's logged duration (or remove it entirely) after the
-// fact — for when the timer was left running by mistake and actual_minutes
-// ballooned way past the real focus time.
-export default function EditSessionModal({ session, onClose, onSaved, onDeleted }) {
+// Lets you fix a session's logged duration or company (or remove it entirely)
+// after the fact — for when the timer was left running by mistake and
+// actual_minutes ballooned, or the wrong company was picked at save time.
+export default function EditSessionModal({ user, session, onClose, onSaved, onDeleted }) {
   const [minutes, setMinutes] = useState(String(session.duration_mins ?? ''))
+  const [spaceId, setSpaceId] = useState(session.space_id || '')
+  const { spaces } = useSpaces(user?.id)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -22,7 +25,10 @@ export default function EditSessionModal({ session, onClose, onSaved, onDeleted 
     if (!valid) return
     setSaving(true)
     setErrorMsg(null)
-    const { data, error } = await updateSession(session.id, { duration_mins: Math.round(parsed) })
+    const { data, error } = await updateSession(session.id, {
+      duration_mins: Math.round(parsed),
+      space_id: spaceId || null,
+    })
     setSaving(false)
     if (error) {
       setErrorMsg('Could not save. Try again.')
@@ -87,6 +93,23 @@ export default function EditSessionModal({ session, onClose, onSaved, onDeleted 
             </span>
           )}
         </label>
+
+        {spaces.length > 0 && (
+          <label className="block mt-4">
+            <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--ink-3)' }}>
+              Company
+            </span>
+            <select
+              value={spaceId}
+              onChange={e => setSpaceId(e.target.value)}
+              className="mt-1.5 w-full rounded-xl px-3.5 py-2.5 text-sm font-bold outline-none"
+              style={{ background: 'var(--canvas)', color: 'var(--ink)' }}
+            >
+              <option value="">Unassigned</option>
+              {spaces.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </label>
+        )}
 
         {errorMsg && (
           <p className="text-[11px] mt-3" style={{ color: 'var(--coral-deep)' }}>{errorMsg}</p>

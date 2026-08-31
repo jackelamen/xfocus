@@ -265,6 +265,7 @@ export default function HistoryPage({ user }) {
 
       {editingSession && (
         <EditSessionModal
+          user={user}
           session={editingSession}
           onClose={() => setEditingSession(null)}
           onSaved={handleSessionSaved}

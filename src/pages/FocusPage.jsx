@@ -199,6 +199,7 @@ export default function FocusPage({ user }) {
       )}
       {editingSession && (
         <EditSessionModal
+          user={user}
           session={editingSession}
           onClose={() => setEditingSession(null)}
         />

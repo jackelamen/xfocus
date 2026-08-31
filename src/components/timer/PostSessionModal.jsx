@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useFocusStore } from '../../store/focusStore.js'
 import { useTimerStore } from '../../store/timerStore.js'
+import { useSpaces, getLastSpaceId, setLastSpaceId } from '../../hooks/useSpaces.js'
 import { todayStr, FOCUS_TYPES } from '../../lib/utils.js'
 import toast from 'react-hot-toast'
 
@@ -9,12 +10,14 @@ const STARS = [1, 2, 3, 4, 5]
 export default function PostSessionModal({ user, sessionMeta, onClose }) {
   const saveSession = useFocusStore(s => s.saveSession)
   const { activeBlockId, activeBlockTitle, activeTaskNames, selectedTaskId, selectedTaskName } = useTimerStore()
+  const { spaces } = useSpaces(user?.id)
 
   // Task names = the picked Pulse task (if any) plus any block tasks.
   const taskNames = [selectedTaskName, ...activeTaskNames].filter(Boolean)
   const taskIds = selectedTaskId ? [selectedTaskId] : []
 
   const [feltScore, setFeltScore] = useState(0)
+  const [spaceId, setSpaceId] = useState(getLastSpaceId)
   const [gotDistracted, setGotDistracted] = useState(null)
   const [distractionCount, setDistractionCount] = useState(0)
   const [taskCompleted, setTaskCompleted] = useState(null)
@@ -44,10 +47,12 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
       distraction_count: gotDistracted ? distractionCount : 0,
       task_completed: taskCompleted,
       would_repeat: wouldRepeat,
+      space_id: spaceId || null,
     }
     const { error, reward } = await saveSession(user.id, payload)
     setSaving(false)
     if (error) { toast.error('Failed to save session'); return }
+    setLastSpaceId(spaceId)
     onClose(reward)
   }
 
@@ -203,6 +208,24 @@ export default function PostSessionModal({ user, sessionMeta, onClose }) {
               {FOCUS_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
+
+          {/* Company / space — used by xCompass to attribute this time */}
+          {spaces.length > 0 && (
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest mb-2" style={{ color: 'var(--ink-3)' }}>
+                Company
+              </label>
+              <select
+                value={spaceId}
+                onChange={e => setSpaceId(e.target.value)}
+                className="w-full rounded-xl px-4 py-2.5 text-sm font-medium"
+                style={{ background: 'var(--canvas)', color: 'var(--ink)', border: '1px solid var(--line-2)' }}
+              >
+                <option value="">Unassigned</option>
+                {spaces.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+          )}
 
           {/* Notes */}
           <div>
