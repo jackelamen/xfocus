@@ -11,9 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', '*.svg'],
       manifest: {
-        name: 'xFocus — The EDGEx Focus',
+        name: 'xFocus',
         short_name: 'xFocus',
-        description: 'Deep work timer and time blocking for The EDGEx',
+        description: 'Deep work timer and time blocking',
         theme_color: '#f4f7fc',
         background_color: '#f4f7fc',
         display: 'standalone',
