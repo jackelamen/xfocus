@@ -624,23 +624,9 @@ function RaceCar({ p, running, dark, gradId, overtime }) {
         })}
       </g>
 
-      {/* car */}
-      <g transform={`translate(${px} ${py}) rotate(${heading}) scale(1.45)`} style={{ transition: 'transform 1s linear' }}>
-        {running && [0, 1, 2].map(i => (
-          <rect key={i} className="xf-streak" x={-9 - i * 2.5} y={-1.6 + i * 1.6} width="4.5" height="0.7" rx="0.35"
-            fill={dark ? 'rgba(255,255,255,0.6)' : 'rgba(43,47,68,0.45)'} style={{ animationDelay: `${i * 0.12}s` }} />
-        ))}
-        {/* wheels sit outside the body, like a real open-wheeler */}
-        <rect x="-3.4" y="-3.3" width="2.1" height="1.5" rx="0.6" fill="#14141c" />
-        <rect x="1.4" y="-3.3" width="2.1" height="1.5" rx="0.6" fill="#14141c" />
-        <rect x="-3.4" y="1.8" width="2.1" height="1.5" rx="0.6" fill="#14141c" />
-        <rect x="1.4" y="1.8" width="2.1" height="1.5" rx="0.6" fill="#14141c" />
-        {/* wings */}
-        <rect x="3.5" y="-2.2" width="0.9" height="4.4" rx="0.4" fill={overtime ? '#ed5f2c' : '#ff7e4d'} />
-        <rect x="-4.6" y="-2.6" width="1" height="5.2" rx="0.4" fill={overtime ? '#ed5f2c' : '#ff7e4d'} />
-        {/* monocoque */}
-        <path d="M -4 0 L -1.6 -1.5 L 3.2 -1 L 4.2 0 L 3.2 1 L -1.6 1.5 Z" fill={overtime ? '#ed5f2c' : '#ff7e4d'} />
-        <circle cx="-0.4" cy="0" r="0.95" fill="#14141c" opacity="0.75" />
+      {/* car: a top-down modern F1 silhouette pointing along the racing line */}
+      <g transform={`translate(${px} ${py}) rotate(${heading}) scale(0.95)`} style={{ transition: 'transform 1s linear' }}>
+        <F1Car running={running} dark={dark} livery={overtime ? '#ed5f2c' : '#ff7e4d'} />
       </g>
     </>
   )
@@ -689,13 +675,9 @@ function Airplane({ p, running, dark, gradId, accent }) {
       <circle cx="90" cy="66" r="2.4" fill="none" stroke={accent.to} strokeWidth="1.2" />
       <circle cx="90" cy="66" r={p >= 1 ? 1.2 : 0} fill={accent.to} style={{ transition: 'r 0.4s ease' }} />
 
-      {/* aircraft */}
-      <g transform={`translate(${x} ${y}) rotate(${angle}) scale(1.5)`} style={{ transition: 'transform 1s linear' }}>
-        <path d="M -4.6 0 L 2.2 -0.9 L 5.4 0 L 2.2 0.9 Z" fill={dark ? '#fff' : '#2b2f44'} />
-        <path d="M -0.6 0 L -3.4 -3.4 L -0.2 -0.5 Z" fill={accent.to} />
-        <path d="M -0.6 0 L -3.4 3.4 L -0.2 0.5 Z" fill={accent.to} />
-        <path d="M -4.4 0 L -5.6 -1.6 L -3.8 -0.4 Z" fill={dark ? 'rgba(255,255,255,0.7)' : 'rgba(43,47,68,0.6)'} />
-        {running && <circle cx="-5.4" cy="0" r="1.1" fill={accent.to} opacity="0.35" />}
+      {/* aircraft: side-profile airliner banking along the route */}
+      <g transform={`translate(${x} ${y}) rotate(${angle}) scale(1.15)`} style={{ transition: 'transform 1s linear' }}>
+        <Airliner dark={dark} accent={accent} />
       </g>
     </>
   )
@@ -746,19 +728,8 @@ function Rocket({ p, running, gradId, accent }) {
         style={{ transition: 'stroke-dashoffset 1s linear' }} />
 
       {/* rocket */}
-      <g transform={`translate(${x} ${y}) rotate(${angle + 90}) scale(1.4)`} style={{ transition: 'transform 1s linear' }}>
-        {running && (
-          <g className="xf-flame">
-            <path d="M -1.7 2.4 Q 0 8.5 1.7 2.4 Z" fill={accent.to} opacity="0.95" />
-            <path d="M -0.9 2.4 Q 0 5.6 0.9 2.4 Z" fill="#ffd9bd" />
-          </g>
-        )}
-        <path d="M 0 -6 Q 2.6 -1.6 2.6 2.4 L -2.6 2.4 Q -2.6 -1.6 0 -6 Z" fill="#ff7e4d" />
-        <path d="M 0 -6 Q 1.2 -3.4 1.2 -1 L -1.2 -1 Q -1.2 -3.4 0 -6 Z" fill="#ffb894" opacity="0.55" />
-        <circle cx="0" cy="-1.4" r="1.15" fill="#14141f" />
-        <circle cx="-0.35" cy="-1.75" r="0.35" fill="#fff" opacity="0.6" />
-        <path d="M -2.6 2.4 L -4.4 4.6 L -2.2 3.4 Z" fill="#ed5f2c" />
-        <path d="M 2.6 2.4 L 4.4 4.6 L 2.2 3.4 Z" fill="#ed5f2c" />
+      <g transform={`translate(${x} ${y}) rotate(${angle + 90}) scale(1.05)`} style={{ transition: 'transform 1s linear' }}>
+        <RocketShip running={running} accent={accent} />
       </g>
     </>
   )
@@ -771,7 +742,7 @@ function Rocket({ p, running, gradId, accent }) {
 function Hiker({ p, running, dark, gradId, accent }) {
   const trail = [[10, 70], [30, 52], [44, 58], [58, 40], [72, 44], [82, 16]]
   const d = 'M ' + trail.map(([x, y]) => `${x} ${y}`).join(' L ')
-  const { x, y, angle } = pointOnPolyline(p, trail)
+  const { x, y } = pointOnPolyline(p, trail)
 
   return (
     <>
@@ -803,14 +774,9 @@ function Hiker({ p, running, dark, gradId, accent }) {
       <line x1="82" y1="12" x2="82" y2="3.5" stroke={dark ? '#fff' : '#2b2f44'} strokeWidth="0.9" strokeLinecap="round" />
       <path d="M 82 3.5 L 89 5.8 L 82 8.2 Z" fill={p >= 1 ? accent.to : '#ff7e4d'} />
 
-      {/* hiker — leans into the gradient, pack on the back. Coral against the
-          cool ridge so the eye finds "you are here" immediately. */}
-      <g transform={`translate(${x} ${y - 4.6}) rotate(${angle * 0.45}) scale(1.35)`} style={{ transition: 'transform 1s linear' }}>
-        <line x1="1.5" y1="-1.6" x2="2.6" y2="2.8" stroke={dark ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.9)'} strokeWidth="0.55" strokeLinecap="round" />
-        <rect x="-2.7" y="-1.7" width="1.8" height="2.9" rx="0.8" fill="#ed5f2c" />
-        <rect x="-1.5" y="-2" width="3" height="4.4" rx="1.4" fill="#ff7e4d" stroke={dark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.55)'} strokeWidth="0.35" />
-        <circle cx="0.1" cy="-3.7" r="1.55" fill={dark ? '#fff' : '#fdf6f1'} stroke="#ed5f2c" strokeWidth="0.4" />
-        {running && <circle cx="0" cy="-6.8" r="0.85" fill={accent.to} opacity="0.4" />}
+      {/* hiker: an upright silhouette with the feet planted on the trail */}
+      <g transform={`translate(${x} ${y}) scale(1.3)`} style={{ transition: 'transform 1s linear' }}>
+        <HikerFigure dark={dark} running={running} />
       </g>
     </>
   )
@@ -873,4 +839,151 @@ function mixHex(a, b, t) {
   const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16)
   const ch = sh => Math.round(((pa >> sh) & 255) + ((((pb >> sh) & 255) - ((pa >> sh) & 255)) * t))
   return '#' + [16, 8, 0].map(sh => ch(sh).toString(16).padStart(2, '0')).join('')
+}
+
+/* ---- vehicles ----
+   Each is drawn in its own local space, pointing along +x (the rocket along
+   -y), about 14 units long, so the scenes only have to position and rotate. */
+
+// Top-down modern F1: front wing, needle nose, exposed wheels, halo, sidepods,
+// engine cover and rear wing. Livery carries the face accent.
+function F1Car({ running, dark, livery }) {
+  const tyre = '#16161d'
+  const carbon = dark ? '#2a2b36' : '#2b2f44'
+  // Body contrasts with the asphalt and the (accent-coloured) racing line;
+  // the accent lives on the stripe, wing endplates and airbox instead.
+  const shell = dark ? '#f1f2f6' : '#262a3b'
+  return (
+    <g>
+      {running && [-1.4, 0, 1.4].map((yy, i) => (
+        <rect key={i} className="xf-streak" x={-13 - i * 1.5} y={yy - 0.2} width="4.5" height="0.4" rx="0.2"
+          fill={dark ? 'rgba(255,255,255,0.55)' : 'rgba(43,47,68,0.35)'} style={{ animationDelay: `${i * 0.12}s` }} />
+      ))}
+      {/* suspension arms */}
+      <g stroke={carbon} strokeWidth="0.3" strokeLinecap="round">
+        <line x1="4" y1="-0.5" x2="4" y2="-2.6" /><line x1="4" y1="0.5" x2="4" y2="2.6" />
+        <line x1="-4.4" y1="-1.2" x2="-4.4" y2="-2.8" /><line x1="-4.4" y1="1.2" x2="-4.4" y2="2.8" />
+      </g>
+      {/* tyres: rears wider than fronts */}
+      <rect x="3" y="-3.55" width="2.1" height="1.2" rx="0.35" fill={tyre} />
+      <rect x="3" y="2.35" width="2.1" height="1.2" rx="0.35" fill={tyre} />
+      <rect x="-5.6" y="-3.9" width="2.4" height="1.45" rx="0.4" fill={tyre} />
+      <rect x="-5.6" y="2.45" width="2.4" height="1.45" rx="0.4" fill={tyre} />
+      {/* front wing with endplates */}
+      <path d="M 6.2 -3.1 L 7.2 -3.1 L 7.2 3.1 L 6.2 3.1 L 6.6 0 Z" fill={carbon} />
+      <rect x="6" y="-3.3" width="1.3" height="0.35" rx="0.15" fill={livery} />
+      <rect x="6" y="2.95" width="1.3" height="0.35" rx="0.15" fill={livery} />
+      {/* rear wing */}
+      <rect x="-7.2" y="-2.7" width="1" height="5.4" rx="0.25" fill={carbon} />
+      <rect x="-7.2" y="-2.7" width="0.35" height="5.4" rx="0.15" fill={livery} />
+      {/* body: nose, monocoque, sidepods, tapering engine cover */}
+      <path
+        d="M 7 0 C 6.4 -0.35 4.6 -0.5 2.6 -0.75 L 1.4 -1.9 C 0.2 -2.15 -2 -2.1 -3.2 -1.4 L -5.4 -0.75 L -6.3 -0.5
+           L -6.3 0.5 L -5.4 0.75 L -3.2 1.4 C -2 2.1 0.2 2.15 1.4 1.9 L 2.6 0.75 C 4.6 0.5 6.4 0.35 7 0 Z"
+        fill={shell}
+      />
+      {/* centre stripe + sidepod flashes */}
+      <path d="M 6.6 0 L 2 -0.3 L -5.8 -0.24 L -5.8 0.24 L 2 0.3 Z" fill={livery} />
+      <path d="M 1.2 -1.75 C 0 -1.95 -1.8 -1.9 -2.8 -1.4 L -1.6 -1.2 C -0.6 -1.45 0.4 -1.5 1.2 -1.75 Z" fill={livery} />
+      <path d="M 1.2 1.75 C 0 1.95 -1.8 1.9 -2.8 1.4 L -1.6 1.2 C -0.6 1.45 0.4 1.5 1.2 1.75 Z" fill={livery} />
+      {/* cockpit + halo */}
+      <ellipse cx="0.4" cy="0" rx="1.25" ry="0.62" fill={dark ? '#16161d' : '#0d0e14'} stroke={dark ? 'none' : 'rgba(255,255,255,0.25)'} strokeWidth="0.15" />
+      <path d="M 1.9 0 C 1.2 -1 -0.6 -0.95 -0.9 -0.8 M 1.9 0 C 1.2 1 -0.6 0.95 -0.9 0.8"
+        fill="none" stroke={dark ? carbon : '#8a90a6'} strokeWidth="0.32" strokeLinecap="round" />
+      <circle cx="0.1" cy="0" r="0.42" fill={livery} opacity="0.9" />
+    </g>
+  )
+}
+
+// Side-profile airliner: rounded nose, cockpit glazing, window line, swept
+// wing and engine nacelle, tall fin in the accent colour.
+function Airliner({ dark, accent }) {
+  const skin = dark ? '#eef1f8' : '#ffffff'
+  const line = dark ? 'rgba(0,0,0,0.25)' : 'rgba(43,47,68,0.28)'
+  const belly = dark ? '#c9cfdc' : '#dfe4ee'
+  return (
+    <g>
+      {/* far wing, behind the fuselage */}
+      <path d="M 0.8 -0.2 L -2.6 -2.2 L -3.4 -2.2 L -1.4 -0.2 Z" fill={belly} />
+      {/* fin */}
+      <path d="M -3.9 -1 L -5.6 -3.7 L -6.75 -3.7 L -6.4 -1 Z" fill={accent.from} />
+      {/* fuselage with upswept tail */}
+      <path
+        d="M 7 0.1 C 7 -0.75 6.2 -1.1 5 -1.1 L -4.2 -1.1 L -6.7 -1.3 L -6.8 -0.7 L -3.4 1.05 L 5 1.05 C 6.2 1.05 7 0.8 7 0.1 Z"
+        fill={skin} stroke={line} strokeWidth="0.18"
+      />
+      {/* belly shade + cheatline */}
+      <path d="M 6.6 0.55 C 6 0.95 5.6 1.05 5 1.05 L -3.4 1.05 L -4.4 0.55 Z" fill={belly} />
+      <path d="M 6.4 -0.05 L -5 -0.05" stroke={accent.from} strokeWidth="0.22" opacity="0.8" />
+      {/* windows + cockpit */}
+      {Array.from({ length: 11 }, (_, i) => (
+        <circle key={i} cx={4 - i * 0.72} cy="-0.45" r="0.17" fill={dark ? '#3a4058' : '#5d6680'} />
+      ))}
+      <path d="M 5.9 -0.75 L 6.55 -0.55 L 6.5 -0.3 L 5.8 -0.35 Z" fill={dark ? '#3a4058' : '#5d6680'} />
+      {/* tailplane */}
+      <path d="M -4.8 -0.6 L -6.9 -0.2 L -6.5 0.15 L -4.6 -0.1 Z" fill={belly} stroke={line} strokeWidth="0.12" />
+      {/* near wing + engine */}
+      <path d="M 1.8 0.35 L -1.9 2.9 L -2.9 2.9 L -0.6 0.45 Z" fill={skin} stroke={line} strokeWidth="0.15" />
+      <rect x="0.2" y="1.05" width="2" height="0.9" rx="0.45" fill={belly} stroke={line} strokeWidth="0.15" />
+      <rect x="1.95" y="1.15" width="0.3" height="0.7" rx="0.15" fill={dark ? '#3a4058' : '#5d6680'} />
+    </g>
+  )
+}
+
+// Rocket pointing along -y. The plume is anchored to the nozzle exit and
+// scales from that point (fill-box origin), so it never drifts off the body.
+function RocketShip({ running, accent }) {
+  return (
+    <g>
+      {running && (
+        <g className="xf-flame" style={{ transformBox: 'fill-box', transformOrigin: '50% 0%' }}>
+          <path d="M -1.35 3.9 Q -1.6 6.8 0 10.2 Q 1.6 6.8 1.35 3.9 Z" fill={accent.to} opacity="0.9" />
+          <path d="M -0.7 3.9 Q -0.8 5.9 0 7.8 Q 0.8 5.9 0.7 3.9 Z" fill="#fff4e6" />
+        </g>
+      )}
+      {/* fins */}
+      <path d="M 1.9 0.4 L 3.7 3.2 L 3.7 4.3 L 1.9 3.3 Z" fill="#c9502a" />
+      <path d="M -1.9 0.4 L -3.7 3.2 L -3.7 4.3 L -1.9 3.3 Z" fill="#c9502a" />
+      {/* nozzle */}
+      <path d="M -1.1 3 L 1.1 3 L 1.45 3.95 L -1.45 3.95 Z" fill="#6b7085" />
+      {/* body: an ogive with a lit left side and a shaded right */}
+      <path d="M 0 -7.2 C 1.9 -5.3 2.2 -2 2.1 3.1 L -2.1 3.1 C -2.2 -2 -1.9 -5.3 0 -7.2 Z" fill="#f2efe8" />
+      <path d="M 0 -7.2 C 1.9 -5.3 2.2 -2 2.1 3.1 L 0.9 3.1 C 1.1 -2 0.9 -5.3 0 -7.2 Z" fill="#000" opacity="0.1" />
+      {/* nose cone */}
+      <path d="M 0 -7.2 C 1.15 -6.05 1.6 -5 1.8 -4 L -1.8 -4 C -1.6 -5 -1.15 -6.05 0 -7.2 Z" fill={accent.to} />
+      {/* band + porthole */}
+      <rect x="-2.12" y="1.6" width="4.24" height="0.55" fill={accent.to} opacity="0.85" />
+      <circle cx="0" cy="-1.5" r="1" fill="#1d2340" stroke="#b9bfcc" strokeWidth="0.4" />
+      <circle cx="-0.3" cy="-1.8" r="0.3" fill="#fff" opacity="0.55" />
+    </g>
+  )
+}
+
+// Hiker in profile: forward lean, pack, trekking pole. Feet sit at y=0 so the
+// figure stands on the trail instead of floating over it.
+function HikerFigure({ dark, running }) {
+  const body = dark ? '#eef1f8' : '#2b2f44'
+  return (
+    <g className={running ? 'xf-step' : ''} style={{ transformBox: 'fill-box', transformOrigin: '50% 100%' }}>
+      <ellipse cx="0.2" cy="0.1" rx="2" ry="0.35" fill="#000" opacity={dark ? 0.35 : 0.14} />
+      <g stroke={body} strokeLinecap="round" strokeLinejoin="round" fill="none">
+        {/* legs */}
+        <polyline points="-0.1,-3.1 -0.9,-1.6 -1.7,-0.1" strokeWidth="0.95" />
+        <polyline points="-0.1,-3.1 0.9,-1.7 1.1,-0.1" strokeWidth="0.95" />
+        {/* torso */}
+        <line x1="0.55" y1="-5.4" x2="-0.1" y2="-3.1" strokeWidth="1.45" />
+        {/* arm to pole */}
+        <polyline points="0.45,-5 1.25,-3.9 2.05,-3.55" strokeWidth="0.65" />
+        {/* pole */}
+        <line x1="2.05" y1="-3.8" x2="2.7" y2="-0.05" strokeWidth="0.28" />
+      </g>
+      {/* pack: follows the torso's lean */}
+      <g transform="rotate(16 -0.6 -4.4)">
+        <rect x="-1.75" y="-5.75" width="1.35" height="2.5" rx="0.5" fill="#ff7e4d" />
+        <rect x="-1.75" y="-4.2" width="1.35" height="0.3" fill="#c9502a" />
+      </g>
+      {/* head */}
+      <circle cx="0.95" cy="-6.2" r="0.72" fill={body} />
+    </g>
+  )
 }
