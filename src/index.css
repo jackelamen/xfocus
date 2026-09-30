@@ -145,7 +145,18 @@ body {
 }
 .xf-glow { animation: xf-glow 4s ease-in-out infinite; }
 
+/* Timer faces: blinking colon, breathing leader, drifting clouds, streaming stars */
+@keyframes xf-blink { 0%, 49% { opacity: 0.9; } 50%, 100% { opacity: 0.25; } }
+.xf-blink { animation: xf-blink 1s steps(1) infinite; }
+@keyframes xf-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(1.25); } }
+.xf-pulse { animation: xf-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes xf-drift { from { transform: translateX(3px); } to { transform: translateX(-3px); } }
+.xf-drift { animation: xf-drift 7s ease-in-out infinite alternate; }
+@keyframes xf-stream { from { transform: translateY(-2px); } to { transform: translateY(4px); } }
+.xf-stream { animation: xf-twinkle 3.2s ease-in-out infinite, xf-stream 2.4s linear infinite alternate; }
+
 @media (prefers-reduced-motion: reduce) {
   .xf-halo, .xf-flap-front, .xf-flap-back,
-  .xf-flame, .xf-twinkle, .xf-streak, .xf-glow { animation: none !important; }
+  .xf-flame, .xf-twinkle, .xf-streak, .xf-glow,
+  .xf-blink, .xf-pulse, .xf-drift, .xf-stream { animation: none !important; }
 }

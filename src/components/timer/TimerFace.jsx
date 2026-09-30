@@ -110,51 +110,59 @@ function AccentGrad({ id, accent, horizontal = false }) {
    in space. A hairline rule under the readout fills as the session burns down,
    so progress is legible without a second widget. */
 function DigitalFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColor, running, progress, size, fill, accent, dark }) {
-  const fontSize = size * (fill ? 0.42 : 0.25)
+  const fontSize = size * (fill ? 0.42 : 0.26)
   const color = overtime ? overtimeColor : ink
-  const ghost = display.replace(/\d/g, '8')
-  const ruleW = size * (fill ? 0.86 : 0.62)
+  const barW = size * (fill ? 0.86 : 0.7)
+  const SEGS = 20
+  const lit = overtime ? SEGS : Math.round(progress * SEGS)
+  const parts = display.split(':')
 
   return (
     <div className="relative flex flex-col items-center justify-center" style={{ width: size, height: size }}>
-      {/* ambient light pooled under the digits while the clock runs */}
       {running && (
         <div
           className="absolute xf-glow pointer-events-none"
           style={{
-            width: ruleW * 1.3, height: size * 0.3,
-            background: `radial-gradient(ellipse at 50% 50%, ${overtime ? 'rgba(255,184,148,0.34)' : hexA(accent.from, 0.26)} 0%, rgba(0,0,0,0) 72%)`,
-            filter: 'blur(14px)',
+            width: barW * 1.2, height: size * 0.34,
+            background: `radial-gradient(ellipse at 50% 50%, ${overtime ? 'rgba(255,184,148,0.30)' : hexA(accent.from, 0.2)} 0%, rgba(0,0,0,0) 70%)`,
+            filter: 'blur(16px)',
           }}
         />
       )}
 
-      <div className="relative flex items-center justify-center">
-        {/* unlit segments */}
-        <span
-          aria-hidden
-          className="tabular-nums absolute inset-0 flex items-center justify-center select-none"
-          style={{ ...digitType(fontSize), color: dark ? 'rgba(255,255,255,0.07)' : 'rgba(43,47,68,0.07)' }}
-        >
-          {ghost}
-        </span>
-        <span className="tabular-nums relative" style={{ ...digitType(fontSize), color }}>
-          {display}
-        </span>
+      {/* Colons blink with the seconds while running, like a bedside clock. */}
+      <div className="relative flex items-center tabular-nums" style={{ ...digitType(fontSize), color }}>
+        {parts.map((chunk, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && (
+              <span className={running ? 'xf-blink' : ''} style={{ margin: `0 ${fontSize * 0.02}px`, opacity: 0.9, transform: `translateY(-${fontSize * 0.06}px)` }}>:</span>
+            )}
+            <span>{chunk}</span>
+          </React.Fragment>
+        ))}
       </div>
 
-      {/* progress rule */}
-      <div
-        className="relative overflow-hidden"
-        style={{ width: ruleW, height: 2, marginTop: size * 0.045, background: dark ? 'rgba(255,255,255,0.09)' : 'rgba(43,47,68,0.09)', borderRadius: 2 }}
-      >
-        <div
-          style={{
-            width: `${(overtime ? 1 : progress) * 100}%`, height: '100%', borderRadius: 2,
-            background: `linear-gradient(90deg, ${accent.from}, ${accent.to})`,
-            transition: 'width 1s linear',
-          }}
-        />
+      {/* Segmented meter: each lit cell is a slice of the session, shaded along
+          the accent gradient; the leading cell breathes so "now" is obvious. */}
+      <div className="relative flex" style={{ width: barW, gap: Math.max(2, size * 0.009), marginTop: size * 0.06 }}>
+        {Array.from({ length: SEGS }, (_, i) => {
+          const on = i < lit
+          const lead = running && !overtime && i === lit - 1
+          return (
+            <span
+              key={i}
+              className={lead ? 'xf-pulse' : ''}
+              style={{
+                flex: 1, height: Math.max(5, size * 0.036), borderRadius: 3,
+                background: on
+                  ? mixHex(accent.from, accent.to, i / (SEGS - 1))
+                  : (dark ? 'rgba(255,255,255,0.08)' : 'rgba(43,47,68,0.08)'),
+                boxShadow: on && running ? `0 0 8px ${hexA(mixHex(accent.from, accent.to, i / (SEGS - 1)), 0.45)}` : 'none',
+                transition: 'background 0.6s ease, box-shadow 0.6s ease',
+              }}
+            />
+          )
+        })}
       </div>
 
       <Caption stateLabel={stateLabel} inkSoft={inkSoft} size={size} />
@@ -182,8 +190,11 @@ function FlipFace({ display, stateLabel, ink, inkSoft, overtime, overtimeColor, 
   const plus = display.startsWith('+')
   const clean = plus ? display.slice(1) : display
   const chars = clean.split('')
-  const cardW = size * (fill ? 0.24 : 0.152)
-  const cardH = size * (fill ? 0.40 : 0.27)
+  // Size cards to the space: four digits fill the face, six (h:mm:ss) shrink to fit.
+  const digits = chars.filter(c => c !== ':').length
+  const colons = chars.length - digits
+  const cardW = size * Math.min(fill ? 0.24 : 0.2, 0.9 / (digits + colons * 0.45))
+  const cardH = cardW * 1.62
   const color = overtime ? overtimeColor : ink
 
   return (
@@ -260,7 +271,7 @@ function FlipCard({ char, color, w, h, dark }) {
     ? 'linear-gradient(180deg,#15151d,#0d0d14)'
     : 'linear-gradient(180deg,#e4e8f2,#d7dce9)'
   const seam = dark ? 'rgba(0,0,0,0.6)' : 'rgba(43,47,68,0.13)'
-  const fontSize = h * 0.66
+  const fontSize = h * 0.6
   const type = { ...digitType(fontSize), color }
 
   const leaf = { h, type, leafTop, leafBottom }
@@ -298,7 +309,7 @@ function FlipCard({ char, color, w, h, dark }) {
    against, and the leading cap carries a small glowing head so the eye can
    find "now" instantly. */
 function RingFace({ display, stateLabel, progress, running, overtime, ink, inkSoft, overtimeColor, dark, size, uid, accent }) {
-  const R = 44
+  const R = 43
   const CIRCUM = 2 * Math.PI * R
   const offset = CIRCUM * (1 - progress)
   const headAngle = (progress * 360 - 90) * (Math.PI / 180)
@@ -306,69 +317,112 @@ function RingFace({ display, stateLabel, progress, running, overtime, ink, inkSo
   const hy = 50 + R * Math.sin(headAngle)
   const gradId = `xf-ring-${uid}`
 
+  // Inner orbit sweeps once a minute, so the face shows life between the
+  // slow movements of the main arc.
+  const secs = useMemo(() => {
+    const m = /(\d{2})\s*$/.exec(display || '')
+    return m ? Number(m[1]) : 0
+  }, [display])
+  const r2 = 36.5
+  const C2 = 2 * Math.PI * r2
+  const secA = (secs * 6 - 90) * (Math.PI / 180)
+
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      {/* The halo should read as light coming off the ring, not as a cloud
-          behind the number — so it's ring-shaped and kept faint. */}
       {running && (
         <div
           className="absolute inset-0 rounded-full xf-halo pointer-events-none"
           style={{
-            background: `radial-gradient(circle at 50% 50%, rgba(255,126,77,0) 52%, ${overtime ? 'rgba(255,184,148,0.30)' : hexA(accent.from, 0.22)} 76%, rgba(255,126,77,0) 92%)`,
-            filter: 'blur(5px)',
+            background: `radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 55%, ${overtime ? 'rgba(255,184,148,0.26)' : hexA(accent.from, 0.18)} 74%, rgba(0,0,0,0) 88%)`,
+            filter: 'blur(6px)',
           }}
         />
       )}
-      <svg width={size} height={size} viewBox="0 0 100 100">
-        <defs><AccentGrad id={gradId} accent={accent} /></defs>
+      <svg width={size} height={size} viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
+        <defs>
+          <AccentGrad id={gradId} accent={accent} />
+          <filter id={`${gradId}-glow`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.8" />
+          </filter>
+          <radialGradient id={`${gradId}-dish`} cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stopColor={dark ? '#ffffff' : '#ffffff'} stopOpacity={dark ? 0.05 : 0.9} />
+            <stop offset="100%" stopColor={dark ? '#ffffff' : '#eef1f8'} stopOpacity={dark ? 0.01 : 0.35} />
+          </radialGradient>
+        </defs>
 
-        {/* minute ticks — quiet, but they turn the ring into a scale */}
+        {/* soft dish behind the readout gives the face some depth */}
+        <circle cx="50" cy="50" r="33" fill={`url(#${gradId}-dish)`} />
+
         <g transform="translate(50 50)">
           {Array.from({ length: 60 }, (_, i) => {
             const major = i % 5 === 0
             const a = (i * 6 - 90) * (Math.PI / 180)
-            const r1 = R - (major ? 5.5 : 3.2)
+            const r1 = R - (major ? 6.2 : 4.4)
+            const passed = i / 60 < progress
             return (
               <line
                 key={i}
                 x1={r1 * Math.cos(a)} y1={r1 * Math.sin(a)}
-                x2={(R - 1.5) * Math.cos(a)} y2={(R - 1.5) * Math.sin(a)}
-                stroke={dark ? '#fff' : '#2b2f44'}
-                strokeWidth={major ? 0.9 : 0.4}
-                opacity={major ? (dark ? 0.28 : 0.2) : (dark ? 0.12 : 0.09)}
+                x2={(R - 3.4) * Math.cos(a)} y2={(R - 3.4) * Math.sin(a)}
+                stroke={passed ? accent.from : (dark ? '#fff' : '#2b2f44')}
+                strokeWidth={major ? 0.9 : 0.45}
+                opacity={passed ? 0.55 : major ? (dark ? 0.26 : 0.18) : (dark ? 0.1 : 0.08)}
                 strokeLinecap="round"
+                style={{ transition: 'stroke 0.6s ease, opacity 0.6s ease' }}
               />
             )
           })}
         </g>
 
-        {/* Rotated with the SVG transform attribute, not a CSS transform — the
-            arc has to start at twelve o'clock in every renderer. */}
         <g transform="rotate(-90 50 50)">
-          <circle cx="50" cy="50" r={R} fill="none" stroke={dark ? 'rgba(255,255,255,0.07)' : 'rgba(43,47,68,0.07)'} strokeWidth="3.5" />
-          {/* A round cap on a zero-length arc leaves a stray dot, so the
-              progress stroke only exists once there's progress to show. */}
+          <circle cx="50" cy="50" r={R} fill="none" stroke={dark ? 'rgba(255,255,255,0.07)' : 'rgba(43,47,68,0.07)'} strokeWidth="4.2" />
           {progress > 0.004 && (
+            <>
+              {/* blurred copy underneath = the arc glows instead of sitting flat */}
+              {running && (
+                <circle
+                  cx="50" cy="50" r={R} fill="none"
+                  stroke={`url(#${gradId})`} strokeWidth="4.2" strokeLinecap="round"
+                  strokeDasharray={CIRCUM} strokeDashoffset={offset}
+                  filter={`url(#${gradId}-glow)`} opacity={dark ? 0.8 : 0.55}
+                  style={{ transition: 'stroke-dashoffset 1s linear' }}
+                />
+              )}
+              <circle
+                cx="50" cy="50" r={R} fill="none"
+                stroke={`url(#${gradId})`} strokeWidth="4.2" strokeLinecap="round"
+                strokeDasharray={CIRCUM} strokeDashoffset={offset}
+                style={{ transition: 'stroke-dashoffset 1s linear' }}
+              />
+            </>
+          )}
+
+          {/* seconds orbit */}
+          {running && (
             <circle
-              cx="50" cy="50" r={R} fill="none"
-              stroke={`url(#${gradId})`} strokeWidth="3.5" strokeLinecap="round"
-              strokeDasharray={CIRCUM} strokeDashoffset={offset}
-              style={{ transition: 'stroke-dashoffset 1s linear' }}
+              cx="50" cy="50" r={r2} fill="none"
+              stroke={accent.to} strokeWidth="0.7" strokeLinecap="round" opacity="0.55"
+              strokeDasharray={C2} strokeDashoffset={C2 * (1 - secs / 60)}
+              style={{ transition: secs === 0 ? 'none' : 'stroke-dashoffset 0.5s ease-out' }}
             />
           )}
         </g>
 
-        {/* leading head */}
+        {running && (
+          <circle cx={50 + r2 * Math.cos(secA)} cy={50 + r2 * Math.sin(secA)} r="1.1" fill={accent.to}
+            style={{ transition: secs === 0 ? 'none' : 'all 0.5s ease-out' }} />
+        )}
+
         {progress > 0.004 && progress < 0.999 && (
           <g style={{ transition: 'all 1s linear' }}>
-            <circle cx={hx} cy={hy} r="4.6" fill={accent.to} opacity="0.22" />
-            <circle cx={hx} cy={hy} r="2.3" fill={dark ? '#fff' : '#fff'} stroke={accent.from} strokeWidth="1.4" />
+            <circle className={running ? 'xf-pulse' : ''} cx={hx} cy={hy} r="5.2" fill={accent.to} opacity="0.25" style={{ transformOrigin: `${hx}px ${hy}px`, transformBox: 'view-box' }} />
+            <circle cx={hx} cy={hy} r="2.5" fill="#fff" stroke={accent.from} strokeWidth="1.5" />
           </g>
         )}
       </svg>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="tabular-nums" style={{ ...digitType(size * 0.205), color: overtime ? overtimeColor : ink }}>
+        <span className="tabular-nums" style={{ ...digitType(size * 0.2), color: overtime ? overtimeColor : ink }}>
           {display}
         </span>
         <Caption stateLabel={stateLabel} inkSoft={inkSoft} size={size} />
@@ -495,11 +549,19 @@ function JourneyFace({ kind, display, stateLabel, progress, running, overtime, i
             <stop offset="0%" stopColor={accent.from} stopOpacity={dark ? 0.28 : 0.2} />
             <stop offset="100%" stopColor={accent.to} stopOpacity="0" />
           </linearGradient>
+          <clipPath id={`${gradId}-clip`}>
+            <rect x="4" y="0" width="92" height="72" rx="10" />
+          </clipPath>
         </defs>
-        {kind === 'racecar' && <RaceCar {...sceneProps} overtime={overtime} />}
-        {kind === 'airplane' && <Airplane {...sceneProps} />}
-        {kind === 'rocket' && <Rocket {...sceneProps} />}
-        {kind === 'hiker' && <Hiker {...sceneProps} />}
+        {/* Every scene lives in the same rounded panel so the faces feel like a set. */}
+        <g clipPath={`url(#${gradId}-clip)`}>
+          {kind === 'racecar' && <RaceCar {...sceneProps} overtime={overtime} />}
+          {kind === 'airplane' && <Airplane {...sceneProps} />}
+          {kind === 'rocket' && <Rocket {...sceneProps} />}
+          {kind === 'hiker' && <Hiker {...sceneProps} />}
+        </g>
+        <rect x="4.25" y="0.25" width="91.5" height="71.5" rx="9.8" fill="none"
+          stroke={dark ? 'rgba(255,255,255,0.08)' : 'rgba(43,47,68,0.07)'} strokeWidth="0.5" />
       </svg>
       <div className="flex flex-col items-center" style={{ marginTop: -size * 0.03 }}>
         <span className="tabular-nums" style={{ ...digitType(size * 0.16), color: overtime ? overtimeColor : ink }}>
@@ -535,6 +597,8 @@ function RaceCar({ p, running, dark, gradId, overtime }) {
 
   return (
     <>
+      <rect x="0" y="0" width="100" height="72" fill={dark ? 'rgba(255,255,255,0.03)' : `url(#${gradId}-sky)`} />
+      <ellipse cx={cx} cy={cy} rx={rx - 5} ry={ry - 5} fill={dark ? 'rgba(143,214,168,0.07)' : 'rgba(143,214,168,0.22)'} />
       {/* asphalt */}
       <path d={lap} fill="none" stroke={asphalt} strokeWidth="8" />
       {/* inner kerb */}
@@ -561,7 +625,7 @@ function RaceCar({ p, running, dark, gradId, overtime }) {
       </g>
 
       {/* car */}
-      <g transform={`translate(${px} ${py}) rotate(${heading})`} style={{ transition: 'transform 1s linear' }}>
+      <g transform={`translate(${px} ${py}) rotate(${heading}) scale(1.45)`} style={{ transition: 'transform 1s linear' }}>
         {running && [0, 1, 2].map(i => (
           <rect key={i} className="xf-streak" x={-9 - i * 2.5} y={-1.6 + i * 1.6} width="4.5" height="0.7" rx="0.35"
             fill={dark ? 'rgba(255,255,255,0.6)' : 'rgba(43,47,68,0.45)'} style={{ animationDelay: `${i * 0.12}s` }} />
@@ -600,7 +664,8 @@ function Airplane({ p, running, dark, gradId, accent }) {
       <rect x="4" y="0" width="92" height="72" rx="10" fill={`url(#${gradId}-sky)`} />
       {/* clouds — soft, low contrast, never competing with the plane */}
       {[[22, 30, 1], [72, 24, 0.8], [58, 44, 0.6]].map(([cxp, cyp, s], i) => (
-        <g key={i} opacity={dark ? 0.13 : 0.16} fill={dark ? '#fff' : '#5aa8e6'}>
+        <g key={i} className={running ? 'xf-drift' : ''} opacity={dark ? 0.13 : 0.16} fill={dark ? '#fff' : '#5aa8e6'}
+          style={{ animationDelay: `${-i * 2.3}s` }}>
           <ellipse cx={cxp} cy={cyp} rx={6 * s} ry={2.2 * s} />
           <ellipse cx={cxp - 3 * s} cy={cyp + 0.6 * s} rx={4 * s} ry={1.8 * s} />
           <ellipse cx={cxp + 3.4 * s} cy={cyp + 0.8 * s} rx={3.4 * s} ry={1.5 * s} />
@@ -625,7 +690,7 @@ function Airplane({ p, running, dark, gradId, accent }) {
       <circle cx="90" cy="66" r={p >= 1 ? 1.2 : 0} fill={accent.to} style={{ transition: 'r 0.4s ease' }} />
 
       {/* aircraft */}
-      <g transform={`translate(${x} ${y}) rotate(${angle})`} style={{ transition: 'transform 1s linear' }}>
+      <g transform={`translate(${x} ${y}) rotate(${angle}) scale(1.5)`} style={{ transition: 'transform 1s linear' }}>
         <path d="M -4.6 0 L 2.2 -0.9 L 5.4 0 L 2.2 0.9 Z" fill={dark ? '#fff' : '#2b2f44'} />
         <path d="M -0.6 0 L -3.4 -3.4 L -0.2 -0.5 Z" fill={accent.to} />
         <path d="M -0.6 0 L -3.4 3.4 L -0.2 0.5 Z" fill={accent.to} />
@@ -659,7 +724,7 @@ function Rocket({ p, running, gradId, accent }) {
       </defs>
       <rect x="4" y="0" width="92" height="72" rx="10" fill={`url(#${gradId}-space)`} />
       {stars.map(([sx, sy, r], i) => (
-        <circle key={i} className="xf-twinkle" cx={sx} cy={sy} r={r}
+        <circle key={i} className={running ? 'xf-twinkle xf-stream' : 'xf-twinkle'} cx={sx} cy={sy} r={r}
           fill="#fff" opacity="0.55"
           style={{ animationDelay: `${(i % 5) * 0.6}s` }} />
       ))}
@@ -681,7 +746,7 @@ function Rocket({ p, running, gradId, accent }) {
         style={{ transition: 'stroke-dashoffset 1s linear' }} />
 
       {/* rocket */}
-      <g transform={`translate(${x} ${y}) rotate(${angle + 90})`} style={{ transition: 'transform 1s linear' }}>
+      <g transform={`translate(${x} ${y}) rotate(${angle + 90}) scale(1.4)`} style={{ transition: 'transform 1s linear' }}>
         {running && (
           <g className="xf-flame">
             <path d="M -1.7 2.4 Q 0 8.5 1.7 2.4 Z" fill={accent.to} opacity="0.95" />
@@ -740,7 +805,7 @@ function Hiker({ p, running, dark, gradId, accent }) {
 
       {/* hiker — leans into the gradient, pack on the back. Coral against the
           cool ridge so the eye finds "you are here" immediately. */}
-      <g transform={`translate(${x} ${y - 3.4}) rotate(${angle * 0.45})`} style={{ transition: 'transform 1s linear' }}>
+      <g transform={`translate(${x} ${y - 4.6}) rotate(${angle * 0.45}) scale(1.35)`} style={{ transition: 'transform 1s linear' }}>
         <line x1="1.5" y1="-1.6" x2="2.6" y2="2.8" stroke={dark ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.9)'} strokeWidth="0.55" strokeLinecap="round" />
         <rect x="-2.7" y="-1.7" width="1.8" height="2.9" rx="0.8" fill="#ed5f2c" />
         <rect x="-1.5" y="-2" width="3" height="4.4" rx="1.4" fill="#ff7e4d" stroke={dark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.55)'} strokeWidth="0.35" />
@@ -801,4 +866,11 @@ function pointOnPolyline(p, pts) {
   }
   const last = pts[pts.length - 1]
   return { x: last[0], y: last[1], angle: 0 }
+}
+
+// Blend two #rrggbb colors; t=0 gives a, t=1 gives b.
+function mixHex(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16)
+  const ch = sh => Math.round(((pa >> sh) & 255) + ((((pb >> sh) & 255) - ((pa >> sh) & 255)) * t))
+  return '#' + [16, 8, 0].map(sh => ch(sh).toString(16).padStart(2, '0')).join('')
 }
