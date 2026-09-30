@@ -17,5 +17,10 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // `_` marks intentionally ignored args/errors; `React` is a leftover default import.
+      'no-unused-vars': ['error', { varsIgnorePattern: '^(_|React$)', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
+    },
   },
 ])

@@ -90,8 +90,9 @@ export const useBlocksStore = create((set, get) => ({
     const existing = block.task_ids || []
     // Same task twice on one block is never intentional — treat as a no-op.
     if (existing.includes(taskId)) return { duplicate: true }
-    const task_ids = [...existing, taskId].filter(Boolean)
-    const task_names = [...(block.task_names || []), taskName].filter(Boolean)
+    // Keep task_names positionally aligned with task_ids; don't filter them separately.
+    const task_ids = [...existing, taskId]
+    const task_names = [...(block.task_names || []), taskName || '']
     return get().updateBlock(blockId, { task_ids, task_names })
   },
 

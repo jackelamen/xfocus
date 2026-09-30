@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core'
 import toast from 'react-hot-toast'
@@ -18,6 +18,15 @@ import { findConflicts, blockRange, overlaps } from '../lib/overlap.js'
 
 const PX_PER_MIN_DAY = 1.4
 const PX_PER_MIN_WEEK = 0.9
+
+// pointerWithin reports every droppable under the pointer, including the hour
+// slot beneath a block. Prefer the block so a drop onto it attaches the task
+// instead of creating a second block in the same slot.
+function preferBlocks(args) {
+  const hits = pointerWithin(args)
+  const blockHits = hits.filter(h => String(h.id).startsWith('block-'))
+  return blockHits.length ? blockHits : hits
+}
 
 export default function BlocksPage({ user }) {
   const navigate = useNavigate()
@@ -103,6 +112,18 @@ export default function BlocksPage({ user }) {
       const cut = rest.lastIndexOf('-')
       const date = rest.slice(0, cut)
       const hour = parseInt(rest.slice(cut + 1), 10)
+      // If a block already covers this hour, attach to it rather than stacking a new one.
+      const existing = findConflicts(
+        blocks.filter(b => b.date === date),
+        { start: hour * 60, end: (hour + 1) * 60 }
+      )[0]
+      if (existing) {
+        const res = await addTaskToBlock(existing.id, task.id, task.title)
+        if (res?.duplicate) toast('Already on that block')
+        else if (res?.error) toast.error('Could not add task')
+        else toast.success(`Added “${task.title}” to “${existing.title}”`)
+        return
+      }
       const { error } = await createBlock(user.id, {
         date,
         title: task.title,
@@ -114,13 +135,7 @@ export default function BlocksPage({ user }) {
         focus_type: 'Other',
       })
       if (error) { toast.error('Could not create block'); return }
-      // Dropping onto an hour that's already busy is allowed, but say so.
-      const clashes = findConflicts(
-        blocks.filter(b => b.date === date),
-        { start: hour * 60, end: (hour + 1) * 60 }
-      )
-      if (clashes.length) toast(`Blocked ${String(hour).padStart(2, '0')}:00 — overlaps “${clashes[0].title}”`, { icon: '⚠️' })
-      else toast.success(`Blocked ${String(hour).padStart(2, '0')}:00 for “${task.title}”`)
+      toast.success(`Blocked ${String(hour).padStart(2, '0')}:00 for “${task.title}”`)
     }
   }
 
@@ -153,7 +168,7 @@ export default function BlocksPage({ user }) {
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={preferBlocks} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="xf-canvas h-screen w-full max-w-full flex flex-col overflow-hidden">
 
         {/* Header — stacks on mobile, single row from sm up */}
