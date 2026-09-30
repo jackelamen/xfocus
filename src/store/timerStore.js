@@ -8,6 +8,35 @@ const DEFAULT_CUSTOM = 50
 //    or chime + continue into overtime (soft).
 //  - flow: count UP, open-ended, until the user stops.
 
+// Session snapshot survives reloads. Elapsed time is derived from wall-clock
+// timestamps (not a tick counter) so a throttled background tab stays accurate.
+const STORAGE_KEY = 'xfocus.timer.v1'
+const MAX_RESTORE_SECS = 12 * 3600
+
+function loadSnapshot() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
+    if (!raw || !raw.sessionStartedAt) return null
+    let elapsed = Number(raw.elapsedSecs) || 0
+    // It was running when the page went away: count the gap, resume paused.
+    if (raw.running && raw.savedAt) elapsed += Math.max(0, Math.floor((Date.now() - raw.savedAt) / 1000))
+    if (elapsed > MAX_RESTORE_SECS) return null
+    return { ...raw, elapsedSecs: elapsed, running: false }
+  } catch (_) { return null }
+}
+
+function saveSnapshot(s) {
+  try {
+    if (!s.sessionStartedAt) { localStorage.removeItem(STORAGE_KEY); return }
+    const keys = ['mode', 'strict', 'plannedMins', 'elapsedSecs', 'running', 'overtime', 'warningFired',
+      'sessionStartedAt', 'activeBlockId', 'activeBlockTitle', 'activeTaskNames', 'activeTaskIds',
+      'selectedTaskId', 'selectedTaskName']
+    const out = { savedAt: Date.now() }
+    for (const k of keys) out[k] = s[k]
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(out))
+  } catch (_) { /* storage unavailable */ }
+}
+
 export const useTimerStore = create((set, get) => ({
   mode: 'pomodoro',
   strict: false,             // strict = hard stop at 0; soft = overtime allowed
@@ -74,16 +103,20 @@ export const useTimerStore = create((set, get) => ({
 
   // ── Run control ───────────────────────────────────────────────
   start(onComplete) {
-    const { running } = get()
+    const { running, intervalId } = get()
     if (running) return
+    if (intervalId) clearInterval(intervalId)
     const startedAt = get().sessionStartedAt || new Date().toISOString()
+    const baseElapsed = get().elapsedSecs
+    const segmentStart = Date.now()
     const id = setInterval(() => {
-      const { mode, elapsedSecs, plannedMins, strict, warningFired, overtime } = get()
-      const next = elapsedSecs + 1
+      const { mode, plannedMins, strict, warningFired, overtime } = get()
+      const next = baseElapsed + Math.floor((Date.now() - segmentStart) / 1000)
+      if (next === get().elapsedSecs) return
       const plannedSecs = mode === 'flow' ? 0 : plannedMins * 60
 
       // 5-minute warning (countdown modes)
-      if (mode !== 'flow' && !warningFired && plannedSecs - next === 5 * 60 && plannedSecs > 5 * 60) {
+      if (mode !== 'flow' && !warningFired && plannedSecs > 5 * 60 && next >= plannedSecs - 5 * 60 && next < plannedSecs) {
         import('../lib/utils.js').then(m => m.playChime('warning'))
         set({ warningFired: true })
       }
@@ -106,7 +139,7 @@ export const useTimerStore = create((set, get) => ({
       }
 
       set({ elapsedSecs: next })
-    }, 1000)
+    }, 500)
     set({ running: true, intervalId: id, sessionStartedAt: startedAt })
   },
 
@@ -139,3 +172,8 @@ export const useTimerStore = create((set, get) => ({
     set(s => ({ plannedMins: s.plannedMins + mins, overtime: false }))
   },
 }))
+
+// Restore after a reload, then keep the snapshot in sync.
+const restored = loadSnapshot()
+if (restored) useTimerStore.setState(restored)
+useTimerStore.subscribe(saveSnapshot)

@@ -11,6 +11,9 @@ function rangeFor(viewDate, viewMode) {
   return { from: viewDate, to: viewDate }
 }
 
+// Guards against a slow earlier response overwriting a newer day/week view.
+let loadToken = 0
+
 export const useBlocksStore = create((set, get) => ({
   blocks: [],
   viewDate: todayStr(),
@@ -38,8 +41,9 @@ export const useBlocksStore = create((set, get) => ({
     const { viewDate, viewMode } = get()
     if (!userId) return
     const { from, to } = rangeFor(viewDate, viewMode)
+    const token = ++loadToken
     set({ loading: true })
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('time_blocks')
       .select('*')
       .eq('user_id', userId)
@@ -47,7 +51,10 @@ export const useBlocksStore = create((set, get) => ({
       .lte('date', to)
       .order('date', { ascending: true })
       .order('start_time', { ascending: true })
+    if (token !== loadToken) return   // a newer load superseded this one
+    if (error) { set({ loading: false }); return { error } }
     set({ blocks: data || [], loading: false })
+    return { error: null }
   },
 
   async createBlock(userId, payload) {
@@ -80,8 +87,9 @@ export const useBlocksStore = create((set, get) => ({
   },
 
   async deleteBlock(id) {
-    await supabase.from('time_blocks').delete().eq('id', id)
-    set(s => ({ blocks: s.blocks.filter(b => b.id !== id) }))
+    const { error } = await supabase.from('time_blocks').delete().eq('id', id)
+    if (!error) set(s => ({ blocks: s.blocks.filter(b => b.id !== id) }))
+    return { error }
   },
 
   async addTaskToBlock(blockId, taskId, taskName) {

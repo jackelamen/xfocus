@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useAuth } from './hooks/useAuth.js'
@@ -7,9 +7,9 @@ import { useBlocksStore } from './store/blocksStore.js'
 import Sidebar from './components/layout/Sidebar.jsx'
 import BottomNav from './components/layout/BottomNav.jsx'
 import Login from './pages/Login.jsx'
-import FocusPage from './pages/FocusPage.jsx'
-import BlocksPage from './pages/BlocksPage.jsx'
-import HistoryPage from './pages/HistoryPage.jsx'
+const FocusPage = lazy(() => import('./pages/FocusPage.jsx'))
+const BlocksPage = lazy(() => import('./pages/BlocksPage.jsx'))
+const HistoryPage = lazy(() => import('./pages/HistoryPage.jsx'))
 
 function AuthGate() {
   const { user, loading } = useAuth()
@@ -38,6 +38,7 @@ function AuthGate() {
     <div className="xf-canvas flex h-screen overflow-hidden">
       <Sidebar />
       <main className="flex-1 overflow-hidden">
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Navigate to="/focus" replace />} />
           <Route path="/focus" element={<FocusPage user={user} />} />
@@ -45,6 +46,7 @@ function AuthGate() {
           <Route path="/history" element={<HistoryPage user={user} />} />
           <Route path="*" element={<Navigate to="/focus" replace />} />
         </Routes>
+        </Suspense>
       </main>
       <BottomNav />
     </div>

@@ -84,7 +84,8 @@ export default function BlockForm({ user, initial, onClose }) {
 
   async function handleDelete() {
     if (!window.confirm('Delete this block?')) return
-    await deleteBlock(initial.id)
+    const { error } = await deleteBlock(initial.id)
+    if (error) { toast.error('Could not delete block'); return }
     toast.success('Block deleted')
     onClose()
   }

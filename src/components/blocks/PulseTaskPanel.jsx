@@ -56,7 +56,8 @@ function DraggableTask({ task }) {
         </div>
       </div>
       {task.priority && task.priority !== 'none' && (
-        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded flex-shrink-0" style={{
+        <span title={`${task.priority[0].toUpperCase()}${task.priority.slice(1)} priority`} aria-label={`${task.priority} priority`}
+          className="text-[10px] font-extrabold px-1.5 py-0.5 rounded flex-shrink-0 cursor-help" style={{
           background: isUrgent ? 'rgba(255,155,115,0.16)' : 'rgba(155,143,224,0.14)',
           color: isUrgent ? 'var(--coral-deep)' : 'var(--lav-deep)',
         }}>

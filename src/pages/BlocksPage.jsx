@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core'
+import { DndContext, DragOverlay, PointerSensor, KeyboardSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core'
 import toast from 'react-hot-toast'
 import { useBlocksStore } from '../store/blocksStore.js'
 import { useTimerStore } from '../store/timerStore.js'
@@ -43,7 +43,25 @@ export default function BlocksPage({ user }) {
   const [panelOpen, setPanelOpen] = useState(false)   // mobile drawer
   const timelineRef = useRef(null)
 
-  useEffect(() => { loadBlocks(user.id) }, [user.id, viewDate, viewMode])
+  useEffect(() => {
+    loadBlocks(user.id).then(res => { if (res?.error) toast.error('Could not load time blocks') })
+  }, [user.id, viewDate, viewMode])
+
+  // Pick up changes made on another device when the tab regains focus.
+  useEffect(() => {
+    const onFocus = () => loadBlocks(user.id)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [user.id, loadBlocks])
+
+  // Open the day view near the current time instead of at the top of the grid.
+  useEffect(() => {
+    const el = timelineRef.current
+    if (!el || viewMode === 'week' || viewDate !== todayStr()) return
+    const now = new Date()
+    const mins = now.getHours() * 60 + now.getMinutes() - HOURS[0] * 60
+    el.scrollTop = Math.max(0, mins * PX_PER_MIN_DAY - 120)
+  }, [viewDate, viewMode])
 
   const week = viewMode === 'week'
   const pxPerMin = week ? PX_PER_MIN_WEEK : PX_PER_MIN_DAY
@@ -78,7 +96,10 @@ export default function BlocksPage({ user }) {
     return n
   }, [byDate])
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor),
+  )
 
   function handleFocusNow(block) {
     setActiveBlock(block)
