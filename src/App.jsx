@@ -36,7 +36,7 @@ function AuthGate() {
 
   return (
     <div className="xf-canvas flex h-screen overflow-hidden">
-      <Sidebar user={user} />
+      <Sidebar />
       <main className="flex-1 overflow-hidden">
         <Routes>
           <Route path="/" element={<Navigate to="/focus" replace />} />

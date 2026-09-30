@@ -20,7 +20,7 @@ const PRIORITY_STYLE = {
  * rather than silently disappearing.
  */
 export default function BlockTasks({ userId, value, onChange }) {
-  const ids = value.task_ids || []
+  const ids = useMemo(() => value.task_ids || [], [value.task_ids])
   const names = value.task_names || []
   const { taskMap, loading } = useTasksByIds(userId, ids)
   const { tasks: activeTasks } = usePulseTasks(userId)

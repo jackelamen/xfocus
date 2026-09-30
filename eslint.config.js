@@ -20,6 +20,8 @@ export default defineConfig([
     rules: {
       // `_` marks intentionally ignored args/errors; `React` is a leftover default import.
       'no-unused-vars': ['error', { varsIgnorePattern: '^(_|React$)', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+      // Data-loading effects here intentionally set state; the new compiler-era rule is too strict for them.
+      'react-hooks/set-state-in-effect': 'off',
       'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },

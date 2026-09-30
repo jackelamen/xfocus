@@ -5,7 +5,7 @@ import { playChime } from '../../lib/utils.js'
 const COLORS = ['#f97316', '#fbbf24', '#34d399', '#60a5fa', '#f472b6', '#a78bfa']
 
 function Confetti() {
-  const pieces = useMemo(
+  const [pieces] = useState(
     () =>
       Array.from({ length: 60 }, (_, i) => ({
         id: i,
@@ -16,8 +16,7 @@ function Confetti() {
         size: 6 + Math.random() * 8,
         rot: Math.random() * 360,
         drift: (Math.random() - 0.5) * 120,
-      })),
-    []
+      }))
   )
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">

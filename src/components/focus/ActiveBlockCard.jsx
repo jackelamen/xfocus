@@ -1,5 +1,4 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useBlocksStore } from '../../store/blocksStore.js'
 import { useTimerStore } from '../../store/timerStore.js'
 import { todayStr, timeToMinutes } from '../../lib/utils.js'
@@ -26,7 +25,6 @@ export default function ActiveBlockCard({ wrapClass = '' }) {
   const blocks = useBlocksStore(s => s.blocks)
   const viewDate = useBlocksStore(s => s.viewDate)
   const setActiveBlock = useTimerStore(s => s.setActiveBlock)
-  const navigate = useNavigate()
 
   const isToday = viewDate === todayStr()
   const currentBlock = isToday ? getCurrentBlock(blocks) : null

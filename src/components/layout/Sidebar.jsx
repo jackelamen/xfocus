@@ -12,7 +12,7 @@ const NAV = [
   { to: '/history', icon: 'insights',            label: 'History' },
 ]
 
-export default function Sidebar({ user }) {
+export default function Sidebar() {
   const streak = useFocusStore(s => s.streak)
   const xp = useFocusStore(s => s.xp)
   const lvl = levelFromXp(xp)
